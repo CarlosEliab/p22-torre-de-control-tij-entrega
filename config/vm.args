@@ -1,0 +1,19 @@
+## Argumentos para la VM del release (p22 torre de control TIJ).
+-noshell
+
+## Nombre corto (para lab de una sola VM)
+-sname p22_torre_tij
+
+## OJO: NO pongas "-config sys.config" aqui. relx ya pasa
+## -config <release>/releases/<vsn>/sys.config; un -config relativo
+## hacia que el kernel buscara ./sys.config y abortara el arranque.
+
+## Directorio de trabajo (el respaldo data/ es relativo al cwd)
+-home .
+
+## setcookie igual en nodos distribuidos tipo lab
+-setcookie p22_torre_tij_cookie
+
+## Argumentos recomendados por el repo del curso para la VM
+## (Raspberry Pi CM5 / VM de 4 nucleos; ajusta si tu VM es mas chica)
++S 4:4 +SDcpu 4:4 +SDio 10 +K true +P 1048576

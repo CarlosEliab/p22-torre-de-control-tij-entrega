@@ -1,0 +1,729 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Torre de control — Aeropuerto de Tijuana (TIJ)</title>
+<meta name="theme-color" content="#0b1326">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --surface:#0b1326; --surface-lowest:#060e20; --surface-low:#131b2e;
+  --surface-container:#171f33; --surface-high:#222a3d; --surface-highest:#2d3449;
+  --on-surface:#dae2fd; --on-surface-variant:#bdc8d1;
+  --outline:#87929a; --outline-variant:#3e484f;
+  --primary:#8ed5ff; --primary-container:#38bdf8; --secondary:#4edea3;
+  --tertiary:#e1bfff; --error:#ffb4ab;
+  --programado:#38bdf8; --demorado:#f59e0b; --abordando:#a855f7;
+  --despego:#06b6d4; --aterrizado:#10b981; --cancelado:#f43f5e;
+  --fuente:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace;
+  --radio:4px; --radio-lg:8px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;color-scheme:dark}
+body{margin:0;font-family:var(--fuente);font-size:14px;line-height:1.45;
+  color:var(--on-surface);background:
+    radial-gradient(1100px 560px at 85% -10%,rgba(56,189,248,.10),transparent 60%),
+    var(--surface);
+  -webkit-font-smoothing:antialiased}
+button,input{font:inherit}
+button{cursor:pointer}
+a{color:inherit;text-decoration:none}
+::selection{background:rgba(56,189,248,.28);color:#fff}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track{background:var(--surface-lowest)}
+::-webkit-scrollbar-thumb{background:var(--surface-highest);border-radius:999px}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--primary);
+  outline-offset:2px}
+
+/* ---------- estructura ---------- */
+.shell{display:grid;grid-template-columns:236px minmax(0,1fr);min-height:100vh}
+.sidebar{position:sticky;top:0;height:100vh;z-index:20;display:flex;
+  flex-direction:column;gap:1.4rem;padding:1.2rem 1rem;
+  background:linear-gradient(180deg,var(--surface-low),var(--surface));
+  border-right:1px solid var(--outline-variant)}
+.brand{display:flex;align-items:center;gap:.7rem;padding:.15rem .25rem}
+.brand-mark{width:2.4rem;height:2.4rem;flex:0 0 auto;display:grid;place-items:center;
+  border:1px solid rgba(142,213,255,.45);border-radius:6px;
+  background:rgba(56,189,248,.08);color:var(--primary);
+  font-family:var(--mono);font-size:.68rem;font-weight:700;letter-spacing:.06em}
+.brand strong{display:block;font-size:.88rem;font-weight:600;line-height:1.2}
+.brand span{display:block;margin-top:.18rem;font-family:var(--mono);font-size:.6rem;
+  letter-spacing:.08em;text-transform:uppercase;color:var(--outline)}
+.side-label{font-family:var(--mono);font-size:.6rem;font-weight:700;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--outline);padding:0 .45rem;margin-bottom:.45rem}
+.side-nav{display:flex;flex-direction:column;gap:.18rem}
+.side-nav a{display:flex;align-items:center;gap:.6rem;padding:.55rem .6rem;
+  border:1px solid transparent;border-radius:var(--radio);
+  color:var(--on-surface-variant);font-size:.8rem}
+.side-nav a::before{content:"";width:5px;height:5px;border-radius:50%;
+  background:var(--outline);flex:0 0 auto}
+.side-nav a:hover{background:var(--surface-container);color:var(--on-surface)}
+.side-nav a.activo{background:rgba(56,189,248,.10);
+  border-color:rgba(56,189,248,.22);color:var(--primary)}
+.side-nav a.activo::before{background:var(--primary);box-shadow:0 0 8px var(--primary)}
+.side-foot{margin-top:auto;padding-top:1rem;border-top:1px solid var(--outline-variant);
+  font-family:var(--mono);font-size:.6rem;line-height:1.8;color:var(--outline)}
+.side-foot b{color:var(--secondary);font-weight:600}
+.main{min-width:0;display:flex;flex-direction:column}
+.topbar{position:sticky;top:0;z-index:10;display:flex;align-items:center;
+  justify-content:space-between;flex-wrap:wrap;gap:1rem;
+  padding:1.1rem 1.5rem 1rem;border-bottom:1px solid var(--outline-variant);
+  background:rgba(11,19,38,.88);backdrop-filter:blur(12px)}
+.eyebrow{display:block;font-family:var(--mono);font-size:.58rem;font-weight:700;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--outline)}
+.topbar h1{margin:.18rem 0 0;font-size:1.55rem;font-weight:700;line-height:1.15;
+  letter-spacing:-.02em}
+.topbar h1 span{font-family:var(--mono);font-size:1.05rem;font-weight:600;
+  letter-spacing:.03em;color:var(--primary)}
+.topbar p{margin:.28rem 0 0;color:var(--on-surface-variant);font-size:.76rem}
+.live{display:flex;align-items:center;gap:.55rem;padding:.42rem .68rem;
+  border:1px solid var(--outline-variant);border-radius:var(--radio);
+  background:var(--surface-container);color:var(--on-surface-variant);
+  font-family:var(--mono);font-size:.64rem;font-weight:600;letter-spacing:.06em;
+  text-transform:uppercase;white-space:nowrap}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;
+  background:var(--cancelado);box-shadow:0 0 0 3px rgba(244,63,94,.12)}
+.dot.on{background:var(--secondary);
+  box-shadow:0 0 0 3px rgba(78,222,163,.12),0 0 10px rgba(78,222,163,.55);
+  animation:pulso 2s infinite}
+@keyframes pulso{0%,100%{opacity:1}50%{opacity:.55}}
+.content{width:100%;max-width:1800px;margin:0 auto;padding:1.2rem 1.5rem 2rem}
+
+/* ---------- indicadores ---------- */
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.6rem;
+  margin-bottom:.9rem}
+.kpi{position:relative;overflow:hidden;padding:.7rem .85rem;
+  background:var(--surface-container);border:1px solid var(--outline-variant);
+  border-radius:var(--radio-lg)}
+.kpi::after{content:"";position:absolute;inset:0 auto 0 0;width:3px;
+  background:var(--kpi-color,var(--primary))}
+.kpi.vuelos{--kpi-color:var(--primary-container)}
+.kpi.puertas{--kpi-color:var(--secondary)}
+.kpi.eventos{--kpi-color:var(--tertiary)}
+.kpi.clientes{--kpi-color:var(--demorado)}
+.kpi-label{display:block;font-family:var(--mono);font-size:.58rem;font-weight:700;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--outline)}
+.kpi b{display:block;margin-top:.18rem;font-family:var(--mono);font-size:1.55rem;
+  font-weight:600;line-height:1.2;color:var(--on-surface);
+  font-variant-numeric:tabular-nums}
+.kpi small{display:block;margin-top:.1rem;font-size:.66rem;
+  color:var(--on-surface-variant)}
+
+/* ---------- barra de acciones ---------- */
+.toolbar{display:flex;align-items:flex-end;justify-content:space-between;
+  flex-wrap:wrap;gap:.9rem;margin-bottom:1rem;padding:.8rem .95rem;
+  background:var(--surface-container);border:1px solid var(--outline-variant);
+  border-radius:var(--radio-lg)}
+.toolbar h2{margin:.15rem 0 0;font-size:.9rem;font-weight:600}
+.toolbar p{margin:.2rem 0 0;font-size:.7rem;color:var(--outline)}
+.acciones{display:flex;flex-wrap:wrap;gap:.4rem}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.3rem;
+  padding:.45rem .72rem;border:1px solid var(--outline-variant);
+  border-radius:var(--radio);background:var(--surface-high);
+  color:var(--on-surface);font-size:.72rem;font-weight:500;
+  transition:background .15s,border-color .15s}
+.btn:hover{background:#28364d;border-color:#64748b}
+.btn-primario{background:var(--primary-container);border-color:var(--primary-container);
+  color:#020617;font-weight:700}
+.btn-primario:hover{background:var(--primary);border-color:var(--primary)}
+.btn-peligro{background:rgba(244,63,94,.10);border-color:rgba(244,63,94,.32);
+  color:#fecdd3}
+.btn-peligro:hover{background:rgba(244,63,94,.18);border-color:var(--cancelado)}
+.btn-secundario{background:transparent}
+.section-head{display:flex;align-items:flex-end;justify-content:space-between;
+  gap:1rem;margin:1.05rem 0 .55rem}
+.section-head h2{margin:.12rem 0 0;font-size:.98rem;font-weight:600}
+.section-note{font-family:var(--mono);font-size:.58rem;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--outline);white-space:nowrap}
+
+/* ---------- columnas y fichas ---------- */
+.columnas{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));
+  gap:.55rem;align-items:start}
+.col{--status:var(--programado);display:flex;flex-direction:column;min-width:0;
+  min-height:14rem;max-height:30rem;padding:.55rem;overflow:hidden;
+  background:linear-gradient(180deg,var(--surface-container),rgba(23,31,51,.55));
+  border:1px solid var(--outline-variant);border-radius:var(--radio-lg)}
+.col-body{display:flex;flex-direction:column;flex:1 1 auto;min-height:0;
+  overflow-y:auto;padding-right:2px}
+.col.demorado{--status:var(--demorado)}
+.col.abordando{--status:var(--abordando)}
+.col.despego{--status:var(--despego)}
+.col.aterrizado{--status:var(--aterrizado)}
+.col.cancelado{--status:var(--cancelado)}
+.col h2{display:flex;align-items:center;justify-content:space-between;gap:.4rem;
+  margin:0 0 .55rem;padding-bottom:.45rem;border-bottom:1px solid var(--outline-variant);
+  color:var(--on-surface-variant);font-family:var(--mono);font-size:.58rem;
+  font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.col-name{display:flex;align-items:center;gap:.4rem;min-width:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.col-name::before{content:"";width:6px;height:6px;flex:0 0 auto;border-radius:50%;
+  background:var(--status);box-shadow:0 0 8px var(--status)}
+.contador{min-width:1.35rem;padding:.06rem .32rem;text-align:center;
+  border:1px solid var(--outline-variant);border-radius:999px;
+  background:var(--surface-high);color:var(--on-surface);
+  font-family:var(--mono);font-size:.6rem;font-variant-numeric:tabular-nums}
+.tarjeta{--status:var(--programado);position:relative;margin-bottom:.45rem;
+  padding:.5rem .55rem;background:var(--surface-high);
+  border:1px solid var(--outline-variant);border-left:3px solid var(--status);
+  border-radius:var(--radio);cursor:pointer;
+  transition:background .15s,border-color .15s}
+.tarjeta:hover{background:#28364d;border-color:#475569;border-left-color:var(--status)}
+.tarjeta.programado{--status:var(--programado)}
+.tarjeta.demorado{--status:var(--demorado)}
+.tarjeta.abordando{--status:var(--abordando)}
+.tarjeta.despego{--status:var(--despego)}
+.tarjeta.aterrizado{--status:var(--aterrizado)}
+.tarjeta.cancelado{--status:var(--cancelado);opacity:.72}
+.idline{display:flex;align-items:baseline;justify-content:space-between;gap:.4rem}
+.callsign{font-family:var(--mono);font-size:.76rem;font-weight:700;
+  letter-spacing:.02em;color:var(--on-surface);white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis}
+.hora{font-family:var(--mono);font-size:.66rem;font-weight:500;
+  color:var(--primary);font-variant-numeric:tabular-nums}
+.meta{margin-top:.18rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  font-size:.66rem;color:var(--on-surface-variant)}
+.badges{display:flex;flex-wrap:wrap;gap:.25rem;margin-top:.4rem}
+.badge{display:inline-block;padding:2px 6px;border:1px solid;
+  border-radius:var(--radio);font-family:var(--mono);font-size:.55rem;
+  font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.badge.puerta{background:rgba(56,189,248,.12);border-color:rgba(56,189,248,.30);
+  color:#c4e7ff}
+.badge.demora{background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.30);
+  color:#fde68a}
+.badge.respaldo{background:rgba(244,63,94,.12);border-color:rgba(244,63,94,.30);
+  color:#fecdd3}
+.vacio{margin:.35rem 0 0;padding:.6rem .4rem;border:1px dashed var(--outline-variant);
+  border-radius:var(--radio);text-align:center;font-family:var(--mono);
+  font-size:.58rem;letter-spacing:.05em;text-transform:uppercase;color:var(--outline)}
+
+/* ---------- bitácora ---------- */
+#eventos{margin-top:1.05rem;padding:.8rem .9rem .45rem;
+  background:var(--surface-container);border:1px solid var(--outline-variant);
+  border-radius:var(--radio-lg)}
+#eventos .section-head{margin:0 0 .5rem}
+#eventos .section-head h2{font-size:.9rem}
+#log{max-height:12rem;overflow:auto;font-size:.72rem;line-height:1.5}
+#log .e{display:grid;grid-template-columns:4.3rem minmax(0,1fr);gap:.55rem;
+  padding:.3rem 0;border-bottom:1px solid rgba(62,72,79,.55)}
+#log .e:last-child{border-bottom:0}
+.log-time{font-family:var(--mono);font-size:.62rem;color:var(--outline);
+  font-variant-numeric:tabular-nums}
+.log-msg{min-width:0;overflow-wrap:anywhere}
+
+/* ---------- modal ---------- */
+dialog{margin:auto;padding:0;width:94%;max-width:42rem;max-height:92vh;
+  overflow:hidden;color:var(--on-surface);background:var(--surface-container);
+  border:1px solid #475569;border-radius:var(--radio-lg);
+  box-shadow:0 18px 50px rgba(0,0,0,.65)}
+dialog::backdrop{background:rgba(2,6,23,.72);backdrop-filter:blur(3px)}
+.modal-head{display:flex;align-items:flex-start;justify-content:space-between;
+  gap:1rem;padding:1rem 1.1rem .8rem;background:var(--surface-high);
+  border-bottom:1px solid var(--outline-variant)}
+.modal-head h3{margin:.18rem 0 0;font-size:1.1rem;font-weight:600;line-height:1.25}
+.icon-btn{display:grid;place-items:center;width:1.9rem;height:1.9rem;
+  padding:0;border:1px solid var(--outline-variant);border-radius:var(--radio);
+  background:transparent;color:var(--on-surface-variant);font-size:1.15rem;
+  line-height:1}
+.icon-btn:hover{background:var(--surface-highest);color:var(--on-surface)}
+.modal-body{padding:.9rem 1.1rem;max-height:68vh;overflow:auto}
+.modal-foot{display:flex;justify-content:flex-end;padding:.7rem 1.1rem;
+  background:var(--surface-low);border-top:1px solid var(--outline-variant)}
+dialog table{width:100%;border-collapse:collapse;font-size:.74rem}
+dialog td{padding:.35rem .3rem;vertical-align:top;
+  border-bottom:1px solid rgba(62,72,79,.65)}
+dialog td:first-child{width:38%;font-family:var(--mono);font-size:.6rem;
+  font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--outline)}
+.ficha-section{margin-top:1rem}
+.ficha-section h4{margin:0 0 .4rem;font-family:var(--mono);font-size:.6rem;
+  font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--outline)}
+.detalle{color:var(--outline)}
+.estado-texto{color:var(--primary);font-weight:600}
+.acciones-ficha{display:flex;flex-wrap:wrap;gap:.35rem}
+.cambio-puerta{display:flex;align-items:center;flex-wrap:wrap;gap:.35rem}
+.cambio-puerta span{font-family:var(--mono);font-size:.62rem;color:var(--outline)}
+dialog input{padding:.38rem .5rem;background:var(--surface-lowest);
+  border:1px solid var(--outline-variant);border-radius:var(--radio);
+  color:var(--on-surface);font-family:var(--mono);font-size:.72rem}
+dialog input:focus{outline:none;border-color:var(--primary-container);
+  box-shadow:0 0 0 1px var(--primary-container)}
+dialog .modal-body button{padding:.35rem .6rem;border:1px solid rgba(56,189,248,.35);
+  border-radius:var(--radio);background:rgba(56,189,248,.12);
+  color:var(--primary);font-size:.68rem;font-weight:600}
+dialog .modal-body button:hover{background:rgba(56,189,248,.20)}
+.ayuda{margin:.35rem 0 0;font-size:.66rem;line-height:1.45;color:var(--outline)}
+
+/* ---------- alerta ---------- */
+#alerta{position:fixed;left:50%;bottom:1.1rem;transform:translateX(-50%);
+  z-index:100;display:none;width:max-content;max-width:min(92vw,40rem);
+  padding:.65rem .85rem;background:#2a0f16;color:#ffdad6;
+  border:1px solid rgba(244,63,94,.5);border-left:3px solid var(--cancelado);
+  border-radius:var(--radio);box-shadow:0 12px 30px rgba(0,0,0,.5);
+  font-size:.76rem}
+
+@media(max-width:1280px){
+  .columnas{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media(max-width:1180px){
+  .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:900px){
+  .shell{display:block}
+  .sidebar{position:static;height:auto;display:block;padding:.7rem 1rem;
+    border-right:0;border-bottom:1px solid var(--outline-variant)}
+  .brand-mark{width:2rem;height:2rem;font-size:.6rem}
+  .brand strong{font-size:.8rem}
+  .side-nav{flex-direction:row;gap:.3rem;margin-top:.55rem;overflow:auto}
+  .side-nav a{padding:.38rem .55rem;font-size:.7rem;white-space:nowrap}
+  .side-nav a::before{display:none}
+  .side-label,.side-foot{display:none}
+  .topbar{position:static;padding:1rem}
+  .content{padding:1rem}
+}
+@media(max-width:760px){
+  .columnas{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .toolbar{align-items:flex-start}
+}
+@media(max-width:560px){
+  .columnas{grid-template-columns:1fr}
+  .col{min-height:0}
+  .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .topbar h1{font-size:1.2rem}
+  .topbar p{display:none}
+  .content{padding:.8rem}
+  .toolbar{padding:.75rem}
+  .acciones{width:100%}
+  .acciones .btn{flex:1 1 auto}
+  .section-note{display:none}
+  dialog{width:96%;max-height:94vh}
+  .modal-body{max-height:64vh}
+}
+@media(max-width:380px){
+  .kpis{grid-template-columns:1fr}
+}
+@media(prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">TIJ</div>
+      <div>
+        <strong>Torre de control</strong>
+        <span>MMTJ · Tijuana</span>
+      </div>
+    </div>
+
+    <div>
+      <div class="side-label">Operaciones</div>
+      <nav class="side-nav" aria-label="Secciones del tablero">
+        <a class="activo" href="#resumen">Panel general</a>
+        <a href="#columnas">Tablero de vuelos</a>
+        <a href="#eventos">Bitácora</a>
+      </nav>
+    </div>
+
+    <div class="side-foot">
+      <div><b>EN LÍNEA</b> · operación continua</div>
+      <div>TIJ / MMTJ</div>
+      <div>Erlang · OTP</div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <div>
+        <span class="eyebrow">Aeropuerto Internacional de Tijuana</span>
+        <h1>Torre de control <span>TIJ</span></h1>
+        <p>Panel de operaciones · vuelos, puertas y bitácora en vivo</p>
+      </div>
+      <div class="live" role="status" aria-live="polite">
+        <span class="dot" id="wsdot"></span>
+        <span id="ws-label">Conectando</span>
+      </div>
+    </header>
+
+    <div class="content">
+      <section class="kpis" id="resumen" aria-label="Indicadores de operación">
+        <article class="kpi vuelos">
+          <span class="kpi-label">Vuelos en tablero</span>
+          <b id="s-vuelos">–</b>
+          <small>registrados</small>
+        </article>
+        <article class="kpi puertas">
+          <span class="kpi-label">Puertas libres</span>
+          <b id="s-puertas">–</b>
+          <small>disponibles</small>
+        </article>
+        <article class="kpi eventos">
+          <span class="kpi-label">Eventos / min</span>
+          <b id="s-evm">–</b>
+          <small>actividad del bus</small>
+        </article>
+        <article class="kpi clientes">
+          <span class="kpi-label">Tableros conectados</span>
+          <b id="s-cli">–</b>
+          <small>clientes WebSocket</small>
+        </article>
+      </section>
+
+      <section class="toolbar" aria-label="Acciones de operación">
+        <div>
+          <span class="eyebrow">Control de operación</span>
+          <h2>Acciones de torre</h2>
+          <p>Crear vuelos o inyectar fallas del feed simulado.</p>
+        </div>
+        <div class="acciones">
+          <button class="btn btn-primario" onclick="crearVuelo()">+ Crear vuelo</button>
+          <button class="btn" onclick="demo('niebla')">Niebla +20</button>
+          <button class="btn btn-peligro" onclick="demo('caos')">Caos</button>
+          <button class="btn" onclick="demo('fuera_de_orden')">Fuera de orden</button>
+          <button class="btn btn-secundario" onclick="refrescarTodo()">Refrescar</button>
+        </div>
+      </section>
+
+      <div class="section-head">
+        <div>
+          <span class="eyebrow">Tablero</span>
+          <h2>Vuelos por estado</h2>
+        </div>
+        <span class="section-note">Actualización en vivo</span>
+      </div>
+
+      <div class="columnas" id="columnas">
+        <!-- las columnas por estado se generan con JS -->
+      </div>
+
+      <section id="eventos" aria-label="Bitácora de eventos">
+        <div class="section-head">
+          <div>
+            <span class="eyebrow">Registro</span>
+            <h2>Bitácora de eventos y alertas</h2>
+          </div>
+          <span class="section-note">Últimos 80</span>
+        </div>
+        <div id="log"></div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<dialog id="detalle" aria-labelledby="d-titulo">
+  <div class="modal-head">
+    <div>
+      <span class="eyebrow">Ficha de vuelo</span>
+      <h3 id="d-titulo"></h3>
+    </div>
+    <button class="icon-btn" type="button" aria-label="Cerrar"
+            onclick="document.getElementById('detalle').close()">×</button>
+  </div>
+  <div id="d-cuerpo" class="modal-body"></div>
+  <div class="modal-foot">
+    <button class="btn btn-secundario" type="button"
+            onclick="document.getElementById('detalle').close()">Cerrar</button>
+  </div>
+</dialog>
+
+<div id="alerta" role="alert" aria-live="assertive"></div>
+
+<script>
+"use strict";
+const ESTADOS=["programado","demorado","abordando","despego","aterrizado","cancelado"];
+const NOMBRE={programado:"Programado",demorado:"Demorado",abordando:"Abordando",
+              despego:"Despegó",aterrizado:"Aterrizó",cancelado:"Cancelado"};
+/* acciones legales por estado: las mismas de p22_vuelo_statem:legal/1 */
+const LEGAL={programado:["empezar_abordaje","demorar","cambiar_puerta","cancelar"],
+             demorado:["empezar_abordaje","fin_demora","cambiar_puerta","cancelar"],
+             abordando:["despegar","cambiar_puerta","cancelar"],
+             despego:["aterrizar"],aterrizado:[],cancelado:[]};
+const ETIQUETA={empezar_abordaje:"Abordar",despegar:"Despegar",
+                aterrizar:"Aterrizar",demorar:"+20 min",
+                fin_demora:"Quitar demora",cancelar:"Cancelar",
+                cambiar_puerta:"Cambiar puerta"};
+let vuelos={};           // id -> vista (la "verdad" local del tablero)
+let ws=null, wsViva=false;
+
+/* el API entrega arreglos JSON, pero por si llega un valor suelto */
+function lista(v){ return Array.isArray(v)?v:(v==null?[]:[v]); }
+
+/* ---------- construccion de columnas ---------- */
+function montarColumnas(){
+  const cont=document.getElementById("columnas");
+  cont.innerHTML="";
+  for(const e of ESTADOS){
+    const div=document.createElement("div");
+    div.className="col "+e; div.id="col-"+e;
+    div.innerHTML=`<h2><span class="col-name">${NOMBRE[e]}</span>
+      <span class="contador" id="c-${e}">0</span></h2><div class="col-body"></div>`;
+    cont.appendChild(div);
+  }
+}
+
+/* ---------- pintar ---------- */
+function hora(v){ if(!v) return ""; const d=new Date(v*1000); 
+  return d.toTimeString().slice(0,5); }
+function pintarTodo(){
+  for(const e of ESTADOS){ const col=document.getElementById("col-"+e);
+    col.querySelectorAll(".tarjeta,.vacio").forEach(t=>t.remove()); }
+  let cuenta=Object.fromEntries(ESTADOS.map(e=>[e,0]));
+  for(const id in vuelos){
+    const v=vuelos[id], e=v.estado in NOMBRE?v.estado:"programado";
+    cuenta[e]++;
+    let badges=[];
+    if(v.puerta){
+      const p=String(v.puerta).replace("puerta_","puerta ").toUpperCase();
+      badges.push(`<span class="badge puerta">${esc(p)}</span>`);
+    }
+    if(v.demora_min>0) badges.push(`<span class="badge demora">+${v.demora_min} MIN</span>`);
+    if(v.de_respaldo) badges.push(`<span class="badge respaldo">RESPALDO</span>`);
+    const extras=badges.length?`<div class="badges">${badges.join("")}</div>`:"";
+    const aerolinea=v.aerolinea?`<div class="meta">${esc(v.aerolinea)}</div>`:"";
+    const div=document.createElement("div");
+    div.className="tarjeta "+e;
+    div.dataset.id=id;
+    div.setAttribute("role","button");
+    div.tabIndex=0;
+    div.setAttribute("aria-label",`Vuelo ${v.identificacion||id}, ${NOMBRE[e]}`);
+    div.innerHTML=`<div class="idline">
+        <span class="callsign">${esc(v.identificacion||("V"+id))}</span>
+        <span class="hora">${hora(v.hora_estimada||v.hora_programada)||"—"}</span>
+      </div>${aerolinea}
+      <div class="meta">TIJ → ${esc(v.destino||"—")}</div>${extras}`;
+    div.onclick=()=>detalle(id);
+    div.onkeydown=ev=>{ if(ev.key==="Enter"||ev.key===" "){
+      ev.preventDefault(); detalle(id); } };
+    document.getElementById("col-"+e).querySelector(".col-body").appendChild(div);
+  }
+  for(const e of ESTADOS){
+    const col=document.getElementById("col-"+e);
+    document.getElementById("c-"+e).textContent=cuenta[e];
+    if(cuenta[e]===0){
+      const p=document.createElement("p");
+      p.className="vacio"; p.textContent="Sin vuelos";
+      col.querySelector(".col-body").appendChild(p);
+    }
+  }
+  document.getElementById("s-vuelos").textContent=
+    Object.keys(vuelos).length;
+}
+function esc(s){const d=document.createElement("div");
+  d.append(String(s??""));return d.innerHTML;}
+
+/* ---------- detalle (API) ---------- */
+async function detalle(id){
+  try{
+    const r=await fetch("/api/vuelos/"+id); const j=await r.json();
+    document.getElementById("d-titulo").textContent=
+      (j.identificacion||"Vuelo "+id)+" → "+(j.destino||"");
+    const filas=[
+      `<tr><td>Estado</td><td><span class="estado-texto">${NOMBRE[j.estado]||esc(j.estado)}</span></td></tr>`,
+      `<tr><td>Aerolínea</td><td>${esc(j.aerolinea||"—")}</td></tr>`,
+      `<tr><td>Aeronave</td><td>${esc(j.aeronave||"—")}</td></tr>`,
+      `<tr><td>Puerta</td><td>${esc(j.puerta||"—")}</td></tr>`,
+      `<tr><td>Hora programada</td><td>${hora(j.hora_programada)||"—"}</td></tr>`,
+      `<tr><td>Hora estimada</td><td>${j.hora_estimada?hora(j.hora_estimada):"—"}</td></tr>`,
+      `<tr><td>Demora acumulada</td><td>${j.demora_min||0} min</td></tr>`,
+      `<tr><td>Motivos</td><td>${esc(lista(j.motivos).join(", ")||"—")}</td></tr>`
+    ];
+    const legales=LEGAL[j.estado]||[];
+    const puedeCambiar=legales.includes("cambiar_puerta");
+    const botones=legales.filter(a=>a!=="cambiar_puerta")
+      .map(a=>`<button type="button" onclick="transicion(${id},'${a}')">
+        ${ETIQUETA[a]||a}</button>`).join("");
+    if(botones) filas.push(`<tr><td>Acciones</td><td>
+      <div class="acciones-ficha">${botones}</div></td></tr>`);
+    /* cambio de puerta y hora en UNA sola operacion (caso dificil) */
+    if(puedeCambiar) filas.push(`<tr><td>Cambiar puerta</td><td>
+      <div class="cambio-puerta">
+        <input id="cp-puerta" placeholder="puerta_5" size="8" autocomplete="off">
+        <input id="cp-min" type="number" value="15" min="0" step="5"
+               style="width:4.5em" aria-label="Minutos de demora">
+        <span>min</span>
+        <button type="button" onclick="cambiarPuerta(${id})">Aplicar</button>
+      </div>
+      <p class="ayuda">Si dejas la puerta vacía se asigna una libre; los minutos
+        se suman a la demora y recalculan la hora estimada.</p>
+    </td></tr>`);
+    let historial="";
+    for(const h of lista(j.historial).slice(0,12)){
+      historial+=`<tr><td>${hora(h.ts)||"—"}</td><td>${NOMBRE[h.hacia]||esc(h.hacia)}
+        <span class="detalle">(${esc(h.detalle||"")})</span></td></tr>`;
+    }
+    if(!historial) historial=`<tr><td colspan="2">Sin movimientos.</td></tr>`;
+    document.getElementById("d-cuerpo").innerHTML=
+      `<table class="ficha">${filas.join("")}</table>
+       <div class="ficha-section">
+         <h4>Bitácora del vuelo</h4>
+         <table class="ficha historial">${historial}</table>
+       </div>`;
+    document.getElementById("detalle").showModal();
+  }catch(_){}
+}
+
+/* ---------- acciones de demo ---------- */
+async function crearVuelo(){
+  await fetch("/api/vuelos",{method:"POST"}); refrescarTodo();
+}
+async function refrescarTodo(){
+  try{
+    const r=await fetch("/api/vuelos"); const datos=await r.json();
+    vuelos={};
+    /* el API responde {ok, vuelos:[...]}, no un arreglo suelto */
+    for(const v of (datos.vuelos||[])) vuelos[v.id]=v;
+    pintarTodo();
+  }catch(_){}
+}
+
+/* dispara un escenario de demo del backend (POST /api/demo/:accion) */
+async function demo(accion){
+  try{
+    const r=await fetch("/api/demo/"+accion,{method:"POST"});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok) banner(j.error||"no se pudo ejecutar "+accion);
+    else log("demo: "+accion,"#a855f7");
+  }catch(_){ banner("sin conexión con la torre"); }
+}
+
+/* aplica una transicion manual (la misma maquina de estados) */
+async function transicion(id,accion){
+  const cuerpo={accion:accion,fuente:"torre"};
+  if(accion==="demorar"){ cuerpo.minutos=20; cuerpo.motivo="operación manual"; }
+  try{
+    const r=await fetch("/api/vuelos/"+id+"/estado",
+      {method:"POST",headers:{"content-type":"application/json"},
+       body:JSON.stringify(cuerpo)});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok) banner(j.error||"transición rechazada");
+    else log("vuelo "+id+": "+(ETIQUETA[accion]||accion),"#10b981");
+  }catch(_){ banner("sin conexión con la torre"); }
+  document.getElementById("detalle").close();
+  refrescarTodo();
+}
+
+/* cambio de puerta + hora en una sola transicion */
+async function cambiarPuerta(id){
+  const p=(document.getElementById("cp-puerta").value||"").trim();
+  const min=parseInt(document.getElementById("cp-min").value||"0",10);
+  const cuerpo={accion:"cambiar_puerta",fuente:"torre",
+                minutos:Number.isFinite(min)?min:0,motivo:"cambio operativo"};
+  if(p) cuerpo.puerta=p;
+  try{
+    const r=await fetch("/api/vuelos/"+id+"/estado",
+      {method:"POST",headers:{"content-type":"application/json"},
+       body:JSON.stringify(cuerpo)});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok) banner(j.error||"cambio de puerta rechazado");
+    else log("vuelo "+id+": puerta "+(p||"libre")+
+             (min?" (+"+min+" min)":""),"#a855f7");
+  }catch(_){ banner("sin conexión con la torre"); }
+  document.getElementById("detalle").close();
+  refrescarTodo();
+}
+
+/* ---------- metricas ---------- */
+async function metricas(){
+  try{
+    const r=await fetch("/metrics"); const m=await r.json();
+    document.getElementById("s-puertas").textContent=m.puertas.libres;
+    document.getElementById("s-evm").textContent=m.eventos_por_minuto;
+    document.getElementById("s-cli").textContent=m.clientes_tablero;
+  }catch(_){}
+}
+
+/* ---------- bitacora ---------- */
+function log(msg,color){
+  const d=document.createElement("div"); d.className="e";
+  const t=document.createElement("span"); t.className="log-time";
+  t.textContent=new Date().toTimeString().slice(0,8);
+  const m=document.createElement("span"); m.className="log-msg";
+  m.style.color=color||"#bdc8d1"; m.innerHTML=msg;
+  d.appendChild(t); d.appendChild(m);
+  const l=document.getElementById("log"); l.prepend(d);
+  while(l.children.length>80) l.lastChild.remove();
+}
+
+/* ---------- WebSocket con reconexion (no parpadea) ---------- */
+function conectar(){
+  const proto=location.protocol==="https:"?"wss":"ws";
+  try{ ws=new WebSocket(proto+"://"+location.host+"/ws"); }catch(_){return;}
+  ws.onopen=()=>{ wsViva=true;
+    document.getElementById("wsdot").classList.add("on");
+    document.getElementById("ws-label").textContent="En vivo";
+    log("conectado a la torre","#10b981"); refrescarTodo(); };
+  ws.onclose=()=>{ wsViva=false;
+    document.getElementById("wsdot").classList.remove("on");
+    document.getElementById("ws-label").textContent="Reconectando";
+    log("conexión perdida, reintentando…","#f59e0b");
+    setTimeout(conectar,2000); };     // reconexion automatica
+  ws.onerror=()=>{ try{ws.close();}catch(_){} };
+  ws.onmessage=ev=>{
+    let m; try{ m=JSON.parse(ev.data); }catch(_){ return; }
+    switch(m.tipo){
+      case "resync":
+        vuelos={}; (m.vuelos||[]).forEach(v=>vuelos[v.id]=v); pintarTodo(); break;
+      case "vuelo_creado":
+        vuelos[m.vuelo]={id:m.vuelo,estado:"programado",de_respaldo:false,
+          identificacion:m.identificacion||"",destino:m.destino||"",
+          aerolinea:"",aeronave:m.aeronave||"",puerta:null,
+          demora_min:0,hora_programada:m.hora_programada};
+        log(`nuevo vuelo ${esc(m.identificacion||m.vuelo)} → ${esc(m.destino||"")}`,"#38bdf8");
+        pintarTodo(); break;
+      case "cambio_estado":
+        if(vuelos[m.vuelo]){
+          vuelos[m.vuelo].estado=m.hacia; vuelos[m.vuelo].puerta=m.puerta;
+          vuelos[m.vuelo].demora_min=m.demora_min||vuelos[m.vuelo].demora_min;
+          if(m.hora_estimada) vuelos[m.vuelo].hora_estimada=m.hora_estimada;
+          if(m.motivos) vuelos[m.vuelo].motivos=m.motivos;
+          pintarTodo();
+        }
+        log(`vuelo ${esc(m.identificacion||m.vuelo)}: ${NOMBRE[m.desde]||m.desde}
+             → <b>${NOMBRE[m.hacia]||m.hacia}</b>`,
+            m.hacia==="cancelado"?"#f43f5e":m.hacia==="demorado"?"#f59e0b":"#10b981");
+        break;
+      case "cambio_puerta":
+        if(vuelos[m.vuelo]){
+          vuelos[m.vuelo].puerta=m.puerta_nueva;
+          vuelos[m.vuelo].demora_min=m.demora_min||0;
+          if(m.hora_nueva) vuelos[m.vuelo].hora_estimada=m.hora_nueva;
+          if(m.motivos) vuelos[m.vuelo].motivos=m.motivos;
+          pintarTodo();
+        }
+        log("vuelo "+esc(m.identificacion||m.vuelo)+": puerta "+
+            esc(m.puerta_anterior||"—")+" → <b>"+
+            esc(m.puerta_nueva||"—")+"</b>"+
+            (m.demora_min?" (+"+m.demora_min+" min)":""),"#a855f7");
+        break;
+      case "puerta_asignada": case "puerta_liberada": break;
+      case "evento_ignorado":
+        log(`Ignorado: ${m.razon||"evento fuera de orden"} (fuente ${esc(m.fuente||"")})`,"#87929a"); break;
+      case "transicion_rechazada":
+        log(`Rechazo: ${esc(m.accion||"transición")} en vuelo ${m.vuelo}`,"#f59e0b"); break;
+      case "alerta": log(`Alerta: ${esc(m.mensaje||"")}`,"#f43f5e"); banner(m.mensaje); break;
+      case "caos":
+        log(`Caos: ${esc(m.mensaje||"")}`,"#f43f5e");
+        banner(m.mensaje); break;
+      default: break;
+    }
+  };
+}
+function banner(txt){
+  const a=document.getElementById("alerta");
+  a.textContent="Alerta: "+(txt||""); a.style.display="block";
+  clearTimeout(a._t); a._t=setTimeout(()=>a.style.display="none",6000);
+}
+
+montarColumnas();
+conectar();
+refrescarTodo();
+setInterval(metricas,5000);
+setInterval(refrescarTodo,30000);   // resync de fondo por si existe lag
+metricas();
+</script>
+</body>
+</html>

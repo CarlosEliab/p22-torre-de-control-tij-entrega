@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}@keyframes ping-subtle{0%{transform:scale(0.95);opacity:0.8;}70%{transform:scale(2.2);opacity:0;}100%{transform:scale(2.4);opacity:0;}}@keyframes pulse-live{0%,100%{opacity:1;}50%{opacity:0.4;}}.animate-radar-ping{animation:ping-subtle 2s cubic-bezier(0,0,0.2,1) infinite;}.animate-live-pulse{animation:pulse-live 1.8s cubic-bezier(0.4,0,0.6,1) infinite;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "on-tertiary-fixed": "#2c0051", "on-primary-container": "#004965", "inverse-surface": "#dae2fd", "primary-container": "#38bdf8", "error-container": "#93000a", "surface-container-highest": "#2d3449", "on-tertiary": "#490080", "surface-dim": "#0b1326", "primary-fixed-dim": "#7bd0ff", "surface-container-high": "#222a3d", "outline": "#87929a", "on-primary": "#00354a", "on-error": "#690005", "secondary-fixed": "#6ffbbe", "inverse-primary": "#00668a", "tertiary-container": "#ce9bff", "outline-variant": "#3e484f", "primary-fixed": "#c4e7ff", "background": "#0b1326", "secondary": "#4edea3", "on-primary-fixed-variant": "#004c69", "tertiary-fixed-dim": "#ddb7ff", "on-tertiary-fixed-variant": "#6900b3", "on-surface-variant": "#bdc8d1", "on-surface": "#dae2fd", "surface-variant": "#2d3449", "on-background": "#dae2fd", "surface-container-lowest": "#060e20", "inverse-on-surface": "#283044", "on-secondary-fixed-variant": "#005236", "on-primary-fixed": "#001e2c", "surface-container": "#171f33", "on-error-container": "#ffdad6", "on-secondary": "#003824", "on-secondary-fixed": "#002113", "on-secondary-container": "#00311f", "on-tertiary-container": "#6400ac", "surface-tint": "#7bd0ff", "surface": "#0b1326", "surface-bright": "#31394d", "secondary-container": "#00a572", "primary": "#8ed5ff", "tertiary-fixed": "#f0dbff", "secondary-fixed-dim": "#4edea3", "surface-container-low": "#131b2e", "error": "#ffb4ab", "tertiary": "#e1bfff" }, "borderRadius": { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" }, "spacing": { "space-sm": "0.5rem", "space-lg": "1.25rem", "space-md": "0.75rem", "space-xs": "0.25rem", "margin": "1rem", "gutter-desktop": "1.5rem", "gutter": "1rem", "margin-desktop": "2rem", "space-xl": "2rem" }, "fontFamily": { "headline-lg-mobile": ["Inter"], "headline-md": ["Inter"], "label-caps": ["JetBrains Mono"], "telemetry-sm": ["JetBrains Mono"], "headline-lg": ["Inter"], "body-sm": ["Inter"], "headline-xl": ["Inter"], "telemetry-lg": ["JetBrains Mono"], "headline-xl-mobile": ["Inter"], "body-lg": ["Inter"], "telemetry-md": ["JetBrains Mono"], "body-md": ["Inter"] }, "fontSize": { "headline-lg-mobile": ["20px", {"lineHeight": "28px", "fontWeight": "600"}], "headline-md": ["18px", {"lineHeight": "24px", "fontWeight": "600"}], "label-caps": ["11px", {"lineHeight": "14px", "fontWeight": "700"}], "telemetry-sm": ["12px", {"lineHeight": "16px", "fontWeight": "500"}], "headline-lg": ["24px", {"lineHeight": "32px", "fontWeight": "600"}], "body-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}], "headline-xl": ["32px", {"lineHeight": "40px", "fontWeight": "700"}], "telemetry-lg": ["20px", {"lineHeight": "26px", "fontWeight": "600"}], "headline-xl-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "700"}], "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}], "telemetry-md": ["14px", {"lineHeight": "20px", "fontWeight": "500"}], "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}] } } } };</script></head><body class="bg-surface font-body-md text-on-surface antialiased"><header class="fixed top-0 left-0 right-0 z-50 bg-surface-container-low/95 backdrop-blur-md"><div class="h-20 w-full px-gutter-desktop flex items-center justify-between gap-space-md"><div class="flex items-center gap-space-md min-w-max"><div class="flex items-center gap-space-sm"><img alt="Torre de control TIJ Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/ALJJyrDNDVGfqbHWBdUQIruFvdXt6m5p0bNvK9hPlOqr6xOEEF_rx7lx_3L4mFCuPRArpsh8FPYzvj8HwBdr5dNOGP8P0Zjv-99nyasWLqt8wJMR6G3WMGRGNfqz17vLtmDBWS1dhJ-MYcDWScZcJsSLEYI5m4bqhmOllPB-gfsihDtF-HyQLJpHgb8CCS-m446MBeuOmchIAWTorS9s70MLO63zkNL8W3toia1iMBwh0dfM"/><div class="flex flex-col"><div class="flex items-center gap-space-xs"><span class="font-headline-md text-headline-md text-on-surface tracking-tight font-bold">Torre de control TIJ</span><span class="px-space-xs py-0.5 rounded bg-surface-container-high font-label-caps text-label-caps text-primary tracking-widest">MMTJ</span><div class="relative flex items-center justify-center w-3 h-3 ml-1"><span class="absolute w-2 h-2 rounded-full bg-secondary animate-radar-ping"></span><span class="relative w-1.5 h-1.5 rounded-full bg-secondary"></span></div></div><span class="font-body-sm text-body-sm text-on-surface-variant">Aeropuerto Internacional de Tijuana — tablero en vivo</span></div></div></div><div class="hidden xl:flex items-center gap-space-md px-space-md py-space-xs rounded bg-surface-container-lowest"><div class="flex items-center gap-space-xs font-telemetry-sm text-telemetry-sm"><span class="w-2 h-2 rounded-full bg-secondary animate-live-pulse"></span><span class="text-on-surface-variant font-label-caps text-label-caps">WS:</span><span class="text-secondary font-medium">CONECTADO</span></div><div class="w-px h-4 bg-surface-container-high"></div><div class="flex items-center gap-space-xs font-telemetry-sm text-telemetry-sm"><span class="text-on-surface-variant font-label-caps text-label-caps">VUELOS:</span><span class="text-on-surface font-semibold">42 ACT</span></div><div class="w-px h-4 bg-surface-container-high"></div><div class="flex items-center gap-space-xs font-telemetry-sm text-telemetry-sm"><span class="text-on-surface-variant font-label-caps text-label-caps">PUERTAS:</span><span class="text-secondary-fixed-dim font-semibold">8 LIB</span></div><div class="w-px h-4 bg-surface-container-high"></div><div class="flex items-center gap-space-xs font-telemetry-sm text-telemetry-sm"><span class="text-on-surface-variant font-label-caps text-label-caps">EVT/MIN:</span><span class="text-primary font-semibold">128</span></div><div class="w-px h-4 bg-surface-container-high"></div><div class="flex items-center gap-space-xs font-telemetry-sm text-telemetry-sm"><span class="text-on-surface-variant font-label-caps text-label-caps">PANEL:</span><span class="text-on-surface font-semibold">6 DISP</span></div></div><div class="flex items-center gap-space-md"><div class="flex flex-col items-end px-space-sm py-1 rounded bg-surface-container-lowest font-telemetry-sm text-telemetry-sm"><div class="flex items-center gap-1.5"><span class="font-label-caps text-label-caps text-primary">UTC</span><span class="text-on-surface font-semibold tabular-nums">18:42:09Z</span></div><div class="flex items-center gap-1.5 text-on-surface-variant"><span class="font-label-caps text-label-caps text-outline">TIJ/PST</span><span class="tabular-nums">10:42:09</span></div></div><div class="hidden 2xl:flex items-center gap-space-xs"><button class="px-space-sm py-1.5 rounded bg-primary text-on-primary font-label-caps text-label-caps hover:bg-primary-container hover:text-on-primary-container transition-colors flex items-center gap-1" type="button">+ Crear vuelo</button><button class="px-space-sm py-1.5 rounded bg-surface-container-high text-on-surface font-label-caps text-label-caps hover:bg-surface-bright hover:text-on-surface transition-colors" type="button">Niebla +20</button><button class="px-space-sm py-1.5 rounded bg-surface-container-high text-error font-label-caps text-label-caps hover:bg-error-container hover:text-on-error-container transition-colors" type="button">Caos</button><button class="px-space-sm py-1.5 rounded bg-surface-container-high text-on-surface font-label-caps text-label-caps hover:bg-surface-bright hover:text-on-surface transition-colors" type="button">Fuera de orden</button><button class="p-1.5 rounded bg-surface-container-high text-on-surface hover:bg-surface-bright hover:text-on-surface transition-colors" title="Refrescar" type="button"><span class="material-symbols-outlined text-[18px]">refresh</span></button></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><aside class="fixed left-0 top-20 bottom-0 w-64 bg-surface-container-low z-40 flex flex-col justify-between py-space-md"><div class="flex flex-col gap-space-xs"><div class="px-space-lg pb-space-xs font-label-caps text-label-caps text-outline tracking-wider uppercase">Navegación Radar</div><nav class="flex flex-col gap-1 px-space-sm" data-active-classes="bg-primary-container text-on-primary-container font-semibold"><a aria-current="page" class="flex items-center justify-between px-space-md py-space-sm rounded transition-colors bg-primary-container text-on-primary-container font-semibold" data-path="live-operations" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-[20px]">radar</span><span>Operaciones en Vivo</span></div><span class="w-1.5 h-1.5 rounded-full bg-secondary"></span></a><a class="flex items-center px-space-md py-space-sm rounded font-body-md text-body-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="flight-strips" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-[20px]">view_kanban</span><span>Fichas de Vuelo</span></div></a><a class="flex items-center px-space-md py-space-sm rounded font-body-md text-body-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="runway-apron" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-[20px]">flight_takeoff</span><span>Pista &amp; Plataforma</span></div></a><a class="flex items-center px-space-md py-space-sm rounded font-body-md text-body-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="weather-telemetry" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-[20px]">air</span><span>METAR / Clima</span></div></a><a class="flex items-center px-space-md py-space-sm rounded font-body-md text-body-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="system-logs" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-[20px]">terminal</span><span>Registro de Eventos</span></div></a></nav></div><div class="px-space-md flex flex-col gap-space-xs"><div class="p-space-sm rounded bg-surface-container-lowest font-telemetry-sm text-telemetry-sm text-on-surface-variant flex flex-col gap-1"><div class="flex justify-between items-center"><span class="font-label-caps text-label-caps text-outline">ESTACIÓN</span><span class="text-primary font-bold">TIJ / MMTJ</span></div><div class="flex justify-between items-center"><span class="font-label-caps text-label-caps text-outline">PISTA ACTIVA</span><span class="text-secondary font-bold">RWY 09/27</span></div><div class="flex justify-between items-center"><span class="font-label-caps text-label-caps text-outline">ELEVACIÓN</span><span class="text-on-surface">491 FT</span></div></div></div></aside><div class="pl-64"><main class="relative pt-20 w-full min-h-screen bg-surface px-gutter-desktop py-space-md"><div class="flex flex-col w-full gap-space-lg">
+<!-- TOP METRIC STATUS STRIP -->
+<section class="grid grid-cols-1 xl:grid-cols-12 gap-space-sm items-stretch">
+<!-- Telemetry Cards Cluster (Cols 1-8) -->
+<div class="xl:col-span-8 grid grid-cols-2 sm:grid-cols-5 gap-space-xs">
+<!-- WebSocket Latency -->
+<div class="flex flex-col justify-between p-space-sm rounded bg-surface-container shadow-sm">
+<div class="flex items-center justify-between">
+<span class="font-label-caps text-label-caps text-outline tracking-wider uppercase">Canal WS</span>
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-secondary animate-live-pulse"></span>
+<span class="font-telemetry-sm text-telemetry-sm text-secondary font-semibold">24ms</span>
+</div>
+</div>
+<div class="mt-2 flex items-baseline justify-between">
+<span class="font-telemetry-md text-telemetry-md text-on-surface font-bold">En Línea</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">TLS 1.3</span>
+</div>
+</div>
+<!-- Active Flights -->
+<div class="flex flex-col justify-between p-space-sm rounded bg-surface-container shadow-sm">
+<div class="flex items-center justify-between">
+<span class="font-label-caps text-label-caps text-outline tracking-wider uppercase">Vuelos Activos</span>
+<span class="material-symbols-outlined text-[16px] text-primary">flight</span>
+</div>
+<div class="mt-2 flex items-baseline justify-between">
+<span class="font-headline-lg text-headline-lg text-primary font-bold tabular-nums">42</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">MMTJ SECTOR</span>
+</div>
+</div>
+<!-- Free Gates -->
+<div class="flex flex-col justify-between p-space-sm rounded bg-surface-container shadow-sm">
+<div class="flex items-center justify-between">
+<span class="font-label-caps text-label-caps text-outline tracking-wider uppercase">Puertas Libres</span>
+<span class="material-symbols-outlined text-[16px] text-secondary">meeting_room</span>
+</div>
+<div class="mt-2 flex items-baseline justify-between">
+<span class="font-headline-lg text-headline-lg text-secondary font-bold tabular-nums">6<span class="text-on-surface-variant font-telemetry-md text-telemetry-md">/14</span></span>
+<span class="font-label-caps text-label-caps text-secondary font-semibold">43% CAP</span>
+</div>
+</div>
+<!-- Events / Min -->
+<div class="flex flex-col justify-between p-space-sm rounded bg-surface-container shadow-sm">
+<div class="flex items-center justify-between">
+<span class="font-label-caps text-label-caps text-outline tracking-wider uppercase">Eventos/Min</span>
+<span class="material-symbols-outlined text-[16px] text-primary-container">speed</span>
+</div>
+<div class="mt-2 flex items-baseline justify-between">
+<span class="font-headline-lg text-headline-lg text-primary-container font-bold tabular-nums">128</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">p99: 4.1ms</span>
+</div>
+</div>
+<!-- Connected Operators -->
+<div class="col-span-2 sm:col-span-1 flex flex-col justify-between p-space-sm rounded bg-surface-container shadow-sm">
+<div class="flex items-center justify-between">
+<span class="font-label-caps text-label-caps text-outline tracking-wider uppercase">Operadores</span>
+<span class="material-symbols-outlined text-[16px] text-tertiary">groups</span>
+</div>
+<div class="mt-2 flex items-baseline justify-between">
+<span class="font-headline-lg text-headline-lg text-on-surface font-bold tabular-nums">8</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">RADAR TIJ</span>
+</div>
+</div>
+</div>
+<!-- Simulation Controls Deck (Cols 9-12) -->
+<div class="xl:col-span-4 p-space-sm rounded bg-surface-container flex flex-col justify-between gap-space-xs shadow-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+<span class="font-label-caps text-label-caps text-on-surface tracking-wider uppercase">Control de Simulación &amp; Demo</span>
+</div>
+<span class="font-telemetry-sm text-telemetry-sm text-outline tabular-nums">SIM: ACTIVA</span>
+</div>
+<div class="flex flex-wrap items-center gap-1.5">
+<!-- + Crear Vuelo (Cyan Primary) -->
+<button class="px-space-sm py-1.5 rounded bg-primary-container text-on-primary-container hover:bg-primary transition-colors flex items-center gap-1 font-label-caps text-label-caps font-bold" id="btn-create-flight" type="button">
+<span class="material-symbols-outlined text-[15px]">add</span>
+<span>+ Crear vuelo</span>
+</button>
+<!-- Niebla +20 (Amber Warning) -->
+<button class="px-space-sm py-1.5 rounded bg-surface-container-high text-tertiary-container hover:bg-surface-bright transition-colors font-label-caps text-label-caps font-bold flex items-center gap-1" id="btn-fog" type="button">
+<span class="material-symbols-outlined text-[14px]">foggy</span>
+<span>Niebla +20</span>
+</button>
+<!-- Caos (Red Stress Test) -->
+<button class="px-space-sm py-1.5 rounded bg-error-container text-on-error-container hover:opacity-90 transition-opacity font-label-caps text-label-caps font-bold flex items-center gap-1" id="btn-chaos" type="button">
+<span class="material-symbols-outlined text-[14px]">warning</span>
+<span>Caos</span>
+</button>
+<!-- Fuera de orden -->
+<button class="px-space-sm py-1.5 rounded bg-surface-container-high text-on-surface hover:bg-surface-bright transition-colors font-label-caps text-label-caps" type="button">
+          Fuera de orden
+        </button>
+<!-- Refresh icon button -->
+<button class="p-1.5 rounded bg-surface-container-high text-on-surface hover:bg-surface-bright transition-colors ml-auto" id="btn-refresh-stream" title="Forzar sincronización de registros" type="button">
+<span class="material-symbols-outlined text-[16px]">sync</span>
+</button>
+</div>
+</div>
+</section>
+<!-- RUNWAY & STRIP OVERVIEW SUMMARY STRIP -->
+<section class="grid grid-cols-1 lg:grid-cols-12 gap-space-sm">
+<!-- Active Runway 09/27 Status Bar (Cols 1-7) -->
+<div class="lg:col-span-7 p-space-sm rounded bg-surface-container shadow-sm flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs font-telemetry-sm text-telemetry-sm">
+<span class="px-1.5 py-0.5 rounded bg-surface-container-high font-label-caps text-label-caps text-primary font-bold">RWY 09/27</span>
+<span class="text-on-surface font-semibold">2,960M ASFALTO</span>
+<span class="text-outline">|</span>
+<span class="text-on-surface-variant font-label-caps text-label-caps">ILS CAT I ACTIVO</span>
+</div>
+<span class="font-label-caps text-label-caps text-secondary font-bold flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+          SECTOR DESPEJADO
+        </span>
+</div>
+<!-- Runway Segments Visualizer -->
+<div class="w-full h-4 bg-surface-container-lowest rounded overflow-hidden flex gap-0.5 p-0.5">
+<div class="flex-1 bg-secondary/80 rounded-sm flex items-center justify-center" title="Cabecera 09 - Libre">
+<span class="font-label-caps text-[9px] text-surface-container-lowest font-bold">09</span>
+</div>
+<div class="flex-1 bg-secondary/80 rounded-sm"></div>
+<div class="flex-[1.5] bg-primary-container rounded-sm flex items-center justify-center" title="Intersección Charlie - TJ-404 Rodaje">
+<span class="font-label-caps text-[9px] text-on-primary-container font-bold">TJ-404</span>
+</div>
+<div class="flex-1 bg-secondary/80 rounded-sm"></div>
+<div class="flex-1 bg-secondary/80 rounded-sm flex items-center justify-center" title="Cabecera 27 - Libre">
+<span class="font-label-caps text-[9px] text-surface-container-lowest font-bold">27</span>
+</div>
+</div>
+</div>
+<!-- Meteorological Telemetry Pill (Cols 8-12) -->
+<div class="lg:col-span-5 p-space-sm rounded bg-surface-container shadow-sm flex items-center justify-between gap-space-sm">
+<div class="flex flex-col">
+<span class="font-label-caps text-label-caps text-outline">METAR TIJ 1845Z</span>
+<span class="font-telemetry-sm text-telemetry-sm text-on-surface font-semibold">MMTJ 181845Z 28008KT 10SM SCT020 19/12 A2994</span>
+</div>
+<div class="flex items-center gap-space-md pl-space-md shrink-0">
+<div class="flex flex-col items-end">
+<span class="font-label-caps text-label-caps text-outline">VIENTO</span>
+<span class="font-telemetry-sm text-telemetry-sm text-primary font-bold">280° @ 8KT</span>
+</div>
+<div class="flex flex-col items-end">
+<span class="font-label-caps text-label-caps text-outline">QNH</span>
+<span class="font-telemetry-sm text-telemetry-sm text-secondary font-bold">29.94 IN</span>
+</div>
+</div>
+</div>
+</section>
+<!-- KANBAN BOARD 6-COLUMNS DISPATCH PIPELINE -->
+<section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-space-sm items-start">
+<!-- COL 1: PROGRAMADO (#38bdf8 / Cyan Sky) -->
+<div class="flex flex-col gap-space-xs rounded bg-surface-container p-space-xs shadow-sm">
+<!-- Column Header -->
+<div class="flex items-center justify-between p-space-xs rounded bg-surface-container-low">
+<div class="flex items-center gap-1.5">
+<span class="w-2.5 h-2.5 rounded-full bg-primary-container"></span>
+<span class="font-label-caps text-label-caps text-on-surface font-bold uppercase tracking-wider">Programado</span>
+</div>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-high font-telemetry-sm text-telemetry-sm text-primary-container font-bold tabular-nums">8</span>
+</div>
+<!-- Column Flight Cards Container -->
+<div class="flex flex-col gap-space-xs">
+<!-- Flight Strip: TJ-104 -->
+<article class="p-space-sm rounded bg-surface-container-low hover:bg-surface-container-high transition-colors shadow-sm flex flex-col gap-space-xs">
+<div class="flex items-start justify-between">
+<div class="flex flex-col">
+<span class="font-telemetry-lg text-telemetry-lg text-on-surface font-bold tracking-tight">TJ-104</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Volaris • A320neo</span>
+</div>
+<span class="px-1.5 py-0.5 rounded bg-primary-container/20 text-primary-container font-telemetry-sm text-telemetry-sm font-bold">MEX</span>
+</div>
+<div class="flex items-center justify-between font-telemetry-sm text-telemetry-sm">
+<span class="text-outline">STD: <span class="text-on-surface font-medium tabular-nums">14:30</span></span>
+<span class="text-outline">EST: <span class="text-primary font-bold tabular-nums">14:30</span></span>
+</div>
+<div class="flex flex-wrap gap-1 mt-0.5">
+<span class="px-1.5 py-0.5 rounded bg-surface-container-highest font-label-caps text-label-caps text-on-surface font-semibold">🚪 puerta_2</span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-highest font-label-caps text-label-caps text-secondary font-semibold">legal: listo</span>
+</div>
+</article>
+<!-- Flight Strip: TJ-208 -->
+<article class="p-space-sm rounded bg-surface-container-low hover:bg-surface-container-high transition-colors shadow-sm flex flex-col gap-space-xs">
+<div class="flex items-start justify-between">
+<div class="flex flex-col">
+<span class="font-telemetry-lg text-telemetry-lg text-on-surface font-bold tracking-tight">TJ-208</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">VivaAerobus • A321</span>
+</div>
+<span class="px-1.5 py-0.5 rounded bg-primary-container/20 text-primary-container font-telemetry-sm text-telemetry-sm font-bold">GDL</span>
+</div>
+<div class="flex items-center justify-between font-telemetry-sm text-telemetry-sm">
+<span class="text-outline">STD: <span class="text-on-surface font-medium tabular-nums">15:00</span></span>
+<span class="text-outline">EST: <span class="text-primary font-bold tabular-nums">15:00</span></span>
+</div>
+<div class="flex flex-wrap gap-1 mt-0.5">
+<span class="px-1.5 py-0.5 rounded bg-surface-container-highest font-label-caps text-label-caps text-on-surface font-semibold">🚪 puerta_7</span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-highest font-label-caps text-label-caps text-primary-fixed font-semibold">respaldo</span>
+</div>
+</article>
+<!-- Flight Strip: TJ-550 -->
+<article class="p-space-sm rounded bg-surface-container-low hover:bg-surface-container-high transition-colors shadow-sm flex flex-col gap-space-xs">
+<div class="flex items-start justify-between">
+<div class="flex flex-col">
+<span class="font-telemetry-lg text-telemetry-lg text-on-surface font-bold tracking-tight">TJ-550</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Aeroméxico • B737-8</span>
+</div>
+<span class="px-1.5 py-0.5 rounded bg-primary-container/20 text-primary-container font-telemetry-sm text-telemetry-sm font-bold">CUN</span>
+</div>
+<div class="flex items-center justify-between font-telemetry-sm text-telemetry-sm">
+<span class="text-outline">STD: <span class="text-on-surface font-medium tabular-nums">15:20</span></span>
+<span class="text-outline">EST: <span class="text-primary font-bold tabular-nums">15:20</span></span>
+</div>
+<div class="flex flex-wrap gap-1 mt-0.5">
+<span class="px-1.5 py-0.5 rounded bg-surface-container-highest font-label-caps text-label-caps text-on-surface font-semibold">🚪 puerta_1</span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-highest font-label-caps text-label-caps text-secondary font-semibold">legal: listo</span>
+</div>
+</article>
+</div>
+</div>
+<!-- COL 2: DEMORADO (Amber) -->
+<div class="flex flex-col gap-space-xs rounded bg-surface-container p-space-xs shadow-sm">
+<!-- Column Header -->
+<div class="flex items-center justify-between p-space-xs rounded bg-surface-container-low">
+<div class="flex items-center gap-1.5">
+<span class="w-2.5 h-2.5 rounded-full bg-tertiary-container"></span>
+<span class="font-label-caps text-label-caps text-on-surface font-bold uppercase tracking-wider">Demorado</span>
+</div>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-high font-telemetry-sm text-telemetry-sm text-tertiary-container font-bold tabular-nums">4</span>
+</div>
+<!-- Column Flight Cards Container -->
+<div class="flex flex-col gap-space-xs">
+<!-- Flight Strip: TJ-101 -->
+<article class="p-space-sm rounded bg-surface-container-low hover:bg-surface-container-high transition-colors shadow-sm flex flex-col gap-space-xs">
+<div class="flex items-start justify-between">
+<div class="flex flex-col">
+<span class="font-telemetry-lg text-telemetry-lg text-on-surface font-bold tracking-tight">TJ-101</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Aeroméxico • B737-8</span>
+</div>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-highest text-tertiary-container font-telemetry-sm text-telemetry-sm font-bold">SEA</span>
+</div>
+<div class="flex items-center justify-between font-telemetry-sm text-telemetry-sm">
+<span class="text-outline">STD: <span class="text-on-surface line-through tabular-nums">15:15</span></span>
+<span class="text-outline">EST: <span class="text-tertiary-container font-bold tabular-nums">15:30</span></span>
+</div>
+<div class="flex flex-wrap gap-1 mt-0.5">
+<span class="px-1.5 py-0.5 rounded bg-surface-container-highest font-label-caps text-label-caps text-on-surface font-semibold">🚪 puerta_5</span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-highest font-label-caps text-label-caps text-tertiary-container font-bold">⏱ +15 min</span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-highest font-label-caps text-label-caps text-primary-fixed font-semibold">respaldo</span>
+</div>
+</article>
+<!-- Flight Strip: TJ-312 -->
+<article class="p-space-sm rounded bg-surface-container-low hover:bg-surface-container-high transition-colors shadow-sm flex flex-col gap-space-xs">
+<div class="flex items-start justify-between">
+<div class="flex flex-col">
+<span class="font-telemetry-lg text-telemetry-lg text-on-surface font-bold tracking-tight">TJ-312</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Delta Air Lines • A220</span>
+</div>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-highest text-tertiary-container font-telemetry-sm text-telemetry-sm font-bold">LAX</span>
+</div>
+<div class="flex items-center justify-between font-telemetry-sm text-telemetry-sm">
+<span class="text-outline">STD: <span class="text-on-surface line-through tabular-nums">15:45</span></span>
+<span class="text-outline">EST: <span class="text-tertiary-container font-bold tabular-nums">16:20</span></span>
+</div>
+<div class="flex flex-wrap gap-1 mt-0.5">
+<span class="px-1.5 py-0.5 rounded bg-surface-container-highest font-label-caps text-label-caps text-on-surface font-semibold">🚪 puerta_9</span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-highest font-label-caps text-label-caps text-tertiary-container font-bold">⏱ +35 min</span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-highest font-label-caps text-label-caps text-outline font-semibold">ATC hold</span>
+</div>
+</article>
+</div>
+</div>
+<!-- COL 3: ABORDANDO (Violeta) -->
+<div class="flex flex-col gap-space-xs rounded bg-surface-container p-space-xs shadow-sm">
+<!-- Column Header -->
+<div class="flex items-center justify-between p-space-xs rounded bg-surface-container-low">
+<div class="flex items-center gap-1.5">
+<span class="w-2.5 h-2.5 rounded-full bg-tertiary animate-radar-ping"></span>
+<span class="font-label-caps text-label-caps text-on-surface font-bold uppercase tracking-wider">Abordando</span>
+</div>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-high font-telemetry-sm text-telemetry-sm text-tertiary font-bold tabular-nums">6</span>
+</div>
+<!-- Column Flight Cards Container -->
+<div class="flex flex-col gap-space-xs">
+<!-- Flight Strip: TJ-882 -->
+<article class="p-space-sm rounded bg-surface-container-low hover:bg-surface-container-high transition-colors shadow-sm flex flex-col gap-space-xs">
+<div class="flex items-start justify-between">
+<div class="flex flex-col">
+<span class="font-telemetry-lg text-telemetry-lg text-on-surface font-bold tracking-tight">TJ-882</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Volaris • A320neo</span>
+</div>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-highest text-tertiary font-telemetry-sm text-telemetry-sm font-bold">MTY</span>
+</div>
+<div class="flex items-center justify-between font-telemetry-sm text-telemetry-sm">
+<span class="text-outline">CIERRE: <span class="text-tertiary font-bold tabular-nums">14:50</span></span>
+<span class="text-outline">RESTANTE: <span class="text-secondary font-bold tabular-nums">08 MIN</span></span>
+</div>
+<div class="flex flex-wrap gap-1 mt-0.5">
+<span class="px-1.5 py-0.5 rounded bg-surface-container-highest font-label-caps text-label-caps text-on-surface font-semibold">🚪 puerta_3</span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-highest font-label-caps text-label-caps text-secondary font-semibold">embarque 78%</span>
+</div>
+</article>
+<!-- Flight Strip: TJ-419 -->
+<article class="p-space-sm rounded bg-surface-container-low hover:bg-surface-container-high transition-colors shadow-sm flex flex-col gap-space-xs">
+<div class="flex items-start justify-between">
+<div class="flex flex-col">
+<span class="font-telemetry-lg text-telemetry-lg text-on-surface font-bold tracking-tight">TJ-419</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">VivaAerobus • A320</span>
+</div>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-highest text-tertiary font-telemetry-sm text-telemetry-sm font-bold">BJX</span>
+</div>
+<div class="flex items-center justify-between font-telemetry-sm text-telemetry-sm">
+<span class="text-outline">CIERRE: <span class="text-tertiary font-bold tabular-nums">15:05</span></span>
+<span class="text-outline">RESTANTE: <span class="text-secondary font-bold tabular-nums">23 MIN</span></span>
+</div>
+<div class="flex flex-wrap gap-1 mt-0.5">
+<span class="px-1.5 py-0.5 rounded bg-surface-container-highest font-label-caps text-label-caps text-on-surface font-semibold">🚪 puerta_6</span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-highest font-label-caps text-label-caps text-on-surface-variant font-semibold">embarque 30%</span>
+</div>
+</article>
+</div>
+</div>
+<!-- COL 4: DESPEGÓ (Cian) -->
+<div class="flex flex-col gap-space-xs rounded bg-surface-container p-space-xs shadow-sm">
+<!-- Column Header -->
+<div class="flex items-center justify-between p-space-xs rounded bg-surface-container-low">
+<div class="flex items-center gap-1.5">
+<span class="w-2.5 h-2.5 rounded-full bg-primary-container"></span>
+<span class="font-label-caps text-label-caps text-on-surface font-bold uppercase tracking-wider">Despegó</span>
+</div>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-high font-telemetry-sm text-telemetry-sm text-primary-container font-bold tabular-nums">12</span>
+</div>
+<!-- Column Flight Cards Container -->
+<div class="flex flex-col gap-space-xs">
+<!-- Flight Strip: TJ-702 -->
+<article class="p-space-sm rounded bg-surface-container-low hover:bg-surface-container-high transition-colors shadow-sm flex flex-col gap-space-xs">
+<div class="flex items-start justify-between">
+<div class="flex flex-col">
+<span class="font-telemetry-lg text-telemetry-lg text-on-surface font-bold tracking-tight">TJ-702</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Aeroméxico • B737-MAX8</span>
+</div>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-highest text-primary font-telemetry-sm text-telemetry-sm font-bold">MEX</span>
+</div>
+<div class="flex items-center justify-between font-telemetry-sm text-telemetry-sm">
+<span class="text-outline">ATD: <span class="text-on-surface font-medium tabular-nums">14:18</span></span>
+<span class="text-outline">ALT: <span class="text-primary font-bold tabular-nums">FL180 ↑</span></span>
+</div>
+<div class="flex flex-wrap gap-1 mt-0.5">
+<span class="px-1.5 py-0.5 rounded bg-surface-container-highest font-label-caps text-label-caps text-on-surface font-semibold">RWY 27</span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-highest font-label-caps text-label-caps text-primary font-semibold">SQK 4321</span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-highest font-label-caps text-label-caps text-secondary font-semibold">Ruta TIJ3</span>
+</div>
+</article>
+<!-- Flight Strip: TJ-094 -->
+<article class="p-space-sm rounded bg-surface-container-low hover:bg-surface-container-high transition-colors shadow-sm flex flex-col gap-space-xs">
+<div class="flex items-start justify-between">
+<div class="flex flex-col">
+<span class="font-telemetry-lg text-telemetry-lg text-on-surface font-bold tracking-tight">TJ-094</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Volaris • A321neo</span>
+</div>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-highest text-primary font-telemetry-sm text-telemetry-sm font-bold">TIJ → TLC</span>
+</div>
+<div class="flex items-center justify-between font-telemetry-sm text-telemetry-sm">
+<span class="text-outline">ATD: <span class="text-on-surface font-medium tabular-nums">14:02</span></span>
+<span class="text-outline">ALT: <span class="text-primary font-bold tabular-nums">FL330 CRZ</span></span>
+</div>
+<div class="flex flex-wrap gap-1 mt-0.5">
+<span class="px-1.5 py-0.5 rounded bg-surface-container-highest font-label-caps text-label-caps text-on-surface font-semibold">RWY 27</span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-highest font-label-caps text-label-caps text-primary font-semibold">SQK 1205</span>
+</div>
+</article>
+</div>
+</div>
+<!-- COL 5: ATERRIZÓ (Verde Esmeralda) -->
+<div class="flex flex-col gap-space-xs rounded bg-surface-container p-space-xs shadow-sm">
+<!-- Column Header -->
+<div class="flex items-center justify-between p-space-xs rounded bg-surface-container-low">
+<div class="flex items-center gap-1.5">
+<span class="w-2.5 h-2.5 rounded-full bg-secondary"></span>
+<span class="font-label-caps text-label-caps text-on-surface font-bold uppercase tracking-wider">Aterrizó</span>
+</div>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-high font-telemetry-sm text-telemetry-sm text-secondary font-bold tabular-nums">9</span>
+</div>
+<!-- Column Flight Cards Container -->
+<div class="flex flex-col gap-space-xs">
+<!-- Flight Strip: TJ-404 -->
+<article class="p-space-sm rounded bg-surface-container-low hover:bg-surface-container-high transition-colors shadow-sm flex flex-col gap-space-xs">
+<div class="flex items-start justify-between">
+<div class="flex flex-col">
+<span class="font-telemetry-lg text-telemetry-lg text-on-surface font-bold tracking-tight">TJ-404</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">VivaAerobus • A320</span>
+</div>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-highest text-secondary font-telemetry-sm text-telemetry-sm font-bold">TIJ</span>
+</div>
+<div class="flex items-center justify-between font-telemetry-sm text-telemetry-sm">
+<span class="text-outline">ORIG: <span class="text-on-surface font-medium">OAX</span></span>
+<span class="text-outline">ATA: <span class="text-secondary font-bold tabular-nums">14:38</span></span>
+</div>
+<div class="flex flex-wrap gap-1 mt-0.5">
+<span class="px-1.5 py-0.5 rounded bg-surface-container-highest font-label-caps text-label-caps text-secondary font-semibold">Rodaje TWY-C</span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-highest font-label-caps text-label-caps text-on-surface font-semibold">🚪 puerta_11</span>
+</div>
+</article>
+<!-- Flight Strip: TJ-618 -->
+<article class="p-space-sm rounded bg-surface-container-low hover:bg-surface-container-high transition-colors shadow-sm flex flex-col gap-space-xs">
+<div class="flex items-start justify-between">
+<div class="flex flex-col">
+<span class="font-telemetry-lg text-telemetry-lg text-on-surface font-bold tracking-tight">TJ-618</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Volaris • A320</span>
+</div>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-highest text-secondary font-telemetry-sm text-telemetry-sm font-bold">TIJ</span>
+</div>
+<div class="flex items-center justify-between font-telemetry-sm text-telemetry-sm">
+<span class="text-outline">ORIG: <span class="text-on-surface font-medium">HMO</span></span>
+<span class="text-outline">ATA: <span class="text-secondary font-bold tabular-nums">14:22</span></span>
+</div>
+<div class="flex flex-wrap gap-1 mt-0.5">
+<span class="px-1.5 py-0.5 rounded bg-surface-container-highest font-label-caps text-label-caps text-outline font-semibold">En puerta_4</span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-highest font-label-caps text-label-caps text-secondary font-semibold">Desembarque</span>
+</div>
+</article>
+</div>
+</div>
+<!-- COL 6: CANCELADO (Rojo) -->
+<div class="flex flex-col gap-space-xs rounded bg-surface-container p-space-xs shadow-sm">
+<!-- Column Header -->
+<div class="flex items-center justify-between p-space-xs rounded bg-surface-container-low">
+<div class="flex items-center gap-1.5">
+<span class="w-2.5 h-2.5 rounded-full bg-error"></span>
+<span class="font-label-caps text-label-caps text-on-surface font-bold uppercase tracking-wider">Cancelado</span>
+</div>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-high font-telemetry-sm text-telemetry-sm text-error font-bold tabular-nums">3</span>
+</div>
+<!-- Column Flight Cards Container -->
+<div class="flex flex-col gap-space-xs">
+<!-- Flight Strip: TJ-009 -->
+<article class="p-space-sm rounded bg-surface-container-low hover:bg-surface-container-high transition-colors shadow-sm flex flex-col gap-space-xs">
+<div class="flex items-start justify-between">
+<div class="flex flex-col">
+<span class="font-telemetry-lg text-telemetry-lg text-error font-bold tracking-tight">TJ-009</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Calafia • E145</span>
+</div>
+<span class="px-1.5 py-0.5 rounded bg-error-container text-on-error-container font-telemetry-sm text-telemetry-sm font-bold">LAP</span>
+</div>
+<div class="flex items-center justify-between font-telemetry-sm text-telemetry-sm">
+<span class="text-outline">PROG: <span class="text-on-surface line-through tabular-nums">13:50</span></span>
+<span class="text-error font-bold font-label-caps text-label-caps">ANULADO</span>
+</div>
+<div class="flex flex-wrap gap-1 mt-0.5">
+<span class="px-1.5 py-0.5 rounded bg-surface-container-highest font-label-caps text-label-caps text-error font-semibold">Técnica MMTJ</span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-highest font-label-caps text-label-caps text-outline font-semibold">Aeronave AOG</span>
+</div>
+</article>
+<!-- Flight Strip: TJ-664 -->
+<article class="p-space-sm rounded bg-surface-container-low hover:bg-surface-container-high transition-colors shadow-sm flex flex-col gap-space-xs">
+<div class="flex items-start justify-between">
+<div class="flex flex-col">
+<span class="font-telemetry-lg text-telemetry-lg text-error font-bold tracking-tight">TJ-664</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Volaris • A320</span>
+</div>
+<span class="px-1.5 py-0.5 rounded bg-error-container text-on-error-container font-telemetry-sm text-telemetry-sm font-bold">FAT</span>
+</div>
+<div class="flex items-center justify-between font-telemetry-sm text-telemetry-sm">
+<span class="text-outline">PROG: <span class="text-on-surface line-through tabular-nums">14:10</span></span>
+<span class="text-error font-bold font-label-caps text-label-caps">CLIMA</span>
+</div>
+<div class="flex flex-wrap gap-1 mt-0.5">
+<span class="px-1.5 py-0.5 rounded bg-surface-container-highest font-label-caps text-label-caps text-error font-semibold">Niebla California</span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-highest font-label-caps text-label-caps text-on-surface-variant font-semibold">Reasignado</span>
+</div>
+</article>
+</div>
+</div>
+</section>
+<!-- BOTTOM INTEGRATED EVENT STREAM & SYSTEM LOGS -->
+<section class="p-space-sm rounded bg-surface-container shadow-sm flex flex-col gap-space-xs">
+<!-- Console Section Header -->
+<div class="flex items-center justify-between pb-space-xs">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-[18px] text-primary">terminal</span>
+<span class="font-label-caps text-label-caps text-on-surface font-bold uppercase tracking-wider">Bitácora de eventos y alertas (en vivo)</span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-high font-telemetry-sm text-telemetry-sm text-secondary font-semibold">STREAM ACTIVO</span>
+</div>
+<div class="flex items-center gap-space-md font-telemetry-sm text-telemetry-sm text-on-surface-variant">
+<div class="hidden sm:flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+<span>Consistencia de memoria: <strong class="text-on-surface">100% OK</strong></span>
+</div>
+<div class="flex items-center gap-1">
+<span class="text-outline">Buffer:</span>
+<span class="text-primary font-bold tabular-nums">1,024 evts</span>
+</div>
+</div>
+</div>
+<!-- Event Stream Log Table / Feed -->
+<div class="flex flex-col gap-1 overflow-x-auto font-telemetry-sm text-telemetry-sm" id="telemetry-log-stream">
+<!-- Event Row 1 -->
+<div class="grid grid-cols-12 gap-space-xs py-1 px-space-xs rounded bg-surface-container-low hover:bg-surface-container-high transition-colors items-center">
+<span class="col-span-2 text-outline tabular-nums">18:42:09.814</span>
+<div class="col-span-2 flex items-center">
+<span class="px-1.5 py-0.5 rounded bg-surface-container-high text-primary font-label-caps text-[10px] font-bold">FLIGHT_TAKEOFF</span>
+</div>
+<div class="col-span-5 text-on-surface truncate">
+          Vuelo <strong class="text-primary">TJ-702</strong> completó rotación en RWY 27. Contacto inicial con Tijuana Salidas en 124.900 MHz.
+        </div>
+<span class="col-span-2 text-on-surface-variant text-right">RWY_TRACKER</span>
+<span class="col-span-1 text-secondary text-right font-bold">ACK</span>
+</div>
+<!-- Event Row 2 -->
+<div class="grid grid-cols-12 gap-space-xs py-1 px-space-xs rounded bg-surface-container-lowest hover:bg-surface-container-high transition-colors items-center">
+<span class="col-span-2 text-outline tabular-nums">18:42:04.102</span>
+<div class="col-span-2 flex items-center">
+<span class="px-1.5 py-0.5 rounded bg-surface-container-high text-tertiary-container font-label-caps text-[10px] font-bold">DELAY_INC</span>
+</div>
+<div class="col-span-5 text-on-surface truncate">
+          Ajuste slot para <strong class="text-tertiary-container">TJ-101</strong> (SEA). Retraso extendido +15 min por control de flujo en sector LAX.
+        </div>
+<span class="col-span-2 text-on-surface-variant text-right">FAA_SWIM_GW</span>
+<span class="col-span-1 text-secondary text-right font-bold">SYNC</span>
+</div>
+<!-- Event Row 3 -->
+<div class="grid grid-cols-12 gap-space-xs py-1 px-space-xs rounded bg-surface-container-low hover:bg-surface-container-high transition-colors items-center">
+<span class="col-span-2 text-outline tabular-nums">18:41:55.430</span>
+<div class="col-span-2 flex items-center">
+<span class="px-1.5 py-0.5 rounded bg-surface-container-high text-secondary font-label-caps text-[10px] font-bold">GATE_REASSIGN</span>
+</div>
+<div class="col-span-5 text-on-surface truncate">
+          Asignación automática de plataforma: <strong class="text-secondary">TJ-404</strong> direccionado a puerta_11 tras arribo en pista.
+        </div>
+<span class="col-span-2 text-on-surface-variant text-right">APRON_MGR</span>
+<span class="col-span-1 text-secondary text-right font-bold">LOCK</span>
+</div>
+<!-- Event Row 4 -->
+<div class="grid grid-cols-12 gap-space-xs py-1 px-space-xs rounded bg-surface-container-lowest hover:bg-surface-container-high transition-colors items-center">
+<span class="col-span-2 text-outline tabular-nums">18:41:40.012</span>
+<div class="col-span-2 flex items-center">
+<span class="px-1.5 py-0.5 rounded bg-surface-container-high text-outline font-label-caps text-[10px] font-bold">WS_ACK</span>
+</div>
+<div class="col-span-5 text-on-surface truncate">
+          Heartbeat distribuido: 8 nodos en consenso. Sin partición de red detectada (RTT media: 21.4ms).
+        </div>
+<span class="col-span-2 text-on-surface-variant text-right">CLUSTER_PUB</span>
+<span class="col-span-1 text-secondary text-right font-bold">VALID</span>
+</div>
+<!-- Event Row 5 -->
+<div class="grid grid-cols-12 gap-space-xs py-1 px-space-xs rounded bg-surface-container-low hover:bg-surface-container-high transition-colors items-center">
+<span class="col-span-2 text-outline tabular-nums">18:40:58.742</span>
+<div class="col-span-2 flex items-center">
+<span class="px-1.5 py-0.5 rounded bg-surface-container-high text-tertiary font-label-caps text-[10px] font-bold">ORDER_CHECK</span>
+</div>
+<div class="col-span-5 text-on-surface truncate">
+          Secuencia de salidas verificada para bloque 15:00Z - 15:30Z. Intervalos mínimos respetados según OACI DOC 4444.
+        </div>
+<span class="col-span-2 text-on-surface-variant text-right">DISPATCH_CHK</span>
+<span class="col-span-1 text-secondary text-right font-bold">PASS</span>
+</div>
+</div>
+</section>
+</div>
+<script>
+  (function initDashboardInteractions() {
+    const logStream = document.getElementById('telemetry-log-stream');
+    const btnCreate = document.getElementById('btn-create-flight');
+    const btnFog = document.getElementById('btn-fog');
+    const btnChaos = document.getElementById('btn-chaos');
+    const btnRefresh = document.getElementById('btn-refresh-stream');
+
+    function appendLog(code, desc, source, state, colorClass) {
+      if (!logStream) return;
+      const now = new Date();
+      const timeStr = `${String(now.getUTCHours()).padStart(2, '0')}:${String(now.getUTCMinutes()).padStart(2, '0')}:${String(now.getUTCSeconds()).padStart(2, '0')}.${String(now.getUTCMilliseconds()).padStart(3, '0')}`;
+      
+      const row = document.createElement('div');
+      row.className = 'grid grid-cols-12 gap-space-xs py-1 px-space-xs rounded bg-surface-container-high items-center';
+      row.innerHTML = `
+        <span class="col-span-2 text-primary font-bold tabular-nums">${timeStr}</span>
+        <div class="col-span-2 flex items-center">
+          <span class="px-1.5 py-0.5 rounded bg-surface-container-highest ${colorClass} font-label-caps text-[10px] font-bold">${code}</span>
+        </div>
+        <div class="col-span-5 text-on-surface truncate">${desc}</div>
+        <span class="col-span-2 text-on-surface-variant text-right">${source}</span>
+        <span class="col-span-1 text-secondary text-right font-bold">${state}</span>
+      `;
+      logStream.insertBefore(row, logStream.firstChild);
+      
+      // Keep only top 8 rows for screen tidiness
+      if (logStream.children.length > 8) {
+        logStream.removeChild(logStream.lastChild);
+      }
+    }
+
+    if (btnCreate) {
+      btnCreate.addEventListener('click', () => {
+        const randId = Math.floor(100 + Math.random() * 900);
+        appendLog('FLIGHT_CREATE', `Nuevo plan generado TJ-${randId} (TIJ → CUL). Asignado a cola Programado.`, 'OPERATOR_GUI', 'READY', 'text-primary');
+      });
+    }
+
+    if (btnFog) {
+      btnFog.addEventListener('click', () => {
+        appendLog('METAR_ALERT', 'RVR reducido a 350m en RWY 09/27. Procedimientos de baja visibilidad (LVP) activados (+20m demoras).', 'MET_STATION', 'WARN', 'text-tertiary-container');
+      });
+    }
+
+    if (btnChaos) {
+      btnChaos.addEventListener('click', () => {
+        appendLog('CHAOS_INJECT', 'Simulación de estrés: Transpondedores saturados y resecuenciamiento de aproximaciones MMTJ.', 'SIM_ENGINE', 'ALERT', 'text-error');
+      });
+    }
+
+    if (btnRefresh) {
+      btnRefresh.addEventListener('click', () => {
+        appendLog('WS_SYNC', 'Re-sincronización forzada con servidor de radar primario MMTJ. 42 estados revalidados.', 'WS_CLIENT', 'OK', 'text-secondary');
+      });
+    }
+  })();
+</script></main></div></body></html>

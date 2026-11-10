@@ -1,0 +1,23 @@
+[Unit]
+Description=Torre de control TIJ (Erlang/OTP)
+Documentation=file:/opt/p22/README.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=p22
+Group=p22
+WorkingDirectory=/opt/p22
+Environment=HOME=/opt/p22
+Environment=ERL_CRASH_DUMP=/opt/p22/erl_crash.dump
+ExecStart=/opt/p22/bin/p22_torre_de_control_tij foreground
+ExecStop=/opt/p22/bin/p22_torre_de_control_tij stop
+Restart=on-failure
+RestartSec=5
+LimitNOFILE=65536
+# data/p22_respaldo.bin se escribe aqui
+ReadWritePaths=/opt/p22/data
+
+[Install]
+WantedBy=multi-user.target

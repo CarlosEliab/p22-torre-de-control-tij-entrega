@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}@keyframes ping-subtle{0%{transform:scale(0.95);opacity:0.8;}70%{transform:scale(2.2);opacity:0;}100%{transform:scale(2.4);opacity:0;}}@keyframes pulse-live{0%,100%{opacity:1;}50%{opacity:0.4;}}.animate-radar-ping{animation:ping-subtle 2s cubic-bezier(0,0,0.2,1) infinite;}.animate-live-pulse{animation:pulse-live 1.8s cubic-bezier(0.4,0,0.6,1) infinite;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "on-tertiary-fixed": "#2c0051", "on-primary-container": "#004965", "inverse-surface": "#dae2fd", "primary-container": "#38bdf8", "error-container": "#93000a", "surface-container-highest": "#2d3449", "on-tertiary": "#490080", "surface-dim": "#0b1326", "primary-fixed-dim": "#7bd0ff", "surface-container-high": "#222a3d", "outline": "#87929a", "on-primary": "#00354a", "on-error": "#690005", "secondary-fixed": "#6ffbbe", "inverse-primary": "#00668a", "tertiary-container": "#ce9bff", "outline-variant": "#3e484f", "primary-fixed": "#c4e7ff", "background": "#0b1326", "secondary": "#4edea3", "on-primary-fixed-variant": "#004c69", "tertiary-fixed-dim": "#ddb7ff", "on-tertiary-fixed-variant": "#6900b3", "on-surface-variant": "#bdc8d1", "on-surface": "#dae2fd", "surface-variant": "#2d3449", "on-background": "#dae2fd", "surface-container-lowest": "#060e20", "inverse-on-surface": "#283044", "on-secondary-fixed-variant": "#005236", "on-primary-fixed": "#001e2c", "surface-container": "#171f33", "on-error-container": "#ffdad6", "on-secondary": "#003824", "on-secondary-fixed": "#002113", "on-secondary-container": "#00311f", "on-tertiary-container": "#6400ac", "surface-tint": "#7bd0ff", "surface": "#0b1326", "surface-bright": "#31394d", "secondary-container": "#00a572", "primary": "#8ed5ff", "tertiary-fixed": "#f0dbff", "secondary-fixed-dim": "#4edea3", "surface-container-low": "#131b2e", "error": "#ffb4ab", "tertiary": "#e1bfff" }, "borderRadius": { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" }, "spacing": { "space-sm": "0.5rem", "space-lg": "1.25rem", "space-md": "0.75rem", "space-xs": "0.25rem", "margin": "1rem", "gutter-desktop": "1.5rem", "gutter": "1rem", "margin-desktop": "2rem", "space-xl": "2rem" }, "fontFamily": { "headline-lg-mobile": ["Inter"], "headline-md": ["Inter"], "label-caps": ["JetBrains Mono"], "telemetry-sm": ["JetBrains Mono"], "headline-lg": ["Inter"], "body-sm": ["Inter"], "headline-xl": ["Inter"], "telemetry-lg": ["JetBrains Mono"], "headline-xl-mobile": ["Inter"], "body-lg": ["Inter"], "telemetry-md": ["JetBrains Mono"], "body-md": ["Inter"] }, "fontSize": { "headline-lg-mobile": ["20px", {"lineHeight": "28px", "fontWeight": "600"}], "headline-md": ["18px", {"lineHeight": "24px", "fontWeight": "600"}], "label-caps": ["11px", {"lineHeight": "14px", "fontWeight": "700"}], "telemetry-sm": ["12px", {"lineHeight": "16px", "fontWeight": "500"}], "headline-lg": ["24px", {"lineHeight": "32px", "fontWeight": "600"}], "body-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}], "headline-xl": ["32px", {"lineHeight": "40px", "fontWeight": "700"}], "telemetry-lg": ["20px", {"lineHeight": "26px", "fontWeight": "600"}], "headline-xl-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "700"}], "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}], "telemetry-md": ["14px", {"lineHeight": "20px", "fontWeight": "500"}], "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}] } } } };</script></head><body class="bg-surface font-body-md text-on-surface antialiased"><header class="fixed top-0 left-0 right-0 z-50 bg-surface-container-low/95 backdrop-blur-md"><div class="h-20 w-full px-gutter-desktop flex items-center justify-between gap-space-md"><div class="flex items-center gap-space-md min-w-max"><div class="flex items-center gap-space-sm"><img alt="Torre de control TIJ Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/ALJJyrDNDVGfqbHWBdUQIruFvdXt6m5p0bNvK9hPlOqr6xOEEF_rx7lx_3L4mFCuPRArpsh8FPYzvj8HwBdr5dNOGP8P0Zjv-99nyasWLqt8wJMR6G3WMGRGNfqz17vLtmDBWS1dhJ-MYcDWScZcJsSLEYI5m4bqhmOllPB-gfsihDtF-HyQLJpHgb8CCS-m446MBeuOmchIAWTorS9s70MLO63zkNL8W3toia1iMBwh0dfM"/><div class="flex flex-col"><div class="flex items-center gap-space-xs"><span class="font-headline-md text-headline-md text-on-surface tracking-tight font-bold">Torre de control TIJ</span><span class="px-space-xs py-0.5 rounded bg-surface-container-high font-label-caps text-label-caps text-primary tracking-widest">MMTJ</span><div class="relative flex items-center justify-center w-3 h-3 ml-1"><span class="absolute w-2 h-2 rounded-full bg-secondary animate-radar-ping"></span><span class="relative w-1.5 h-1.5 rounded-full bg-secondary"></span></div></div><span class="font-body-sm text-body-sm text-on-surface-variant">Aeropuerto Internacional de Tijuana — tablero en vivo</span></div></div></div><div class="hidden xl:flex items-center gap-space-md px-space-md py-space-xs rounded bg-surface-container-lowest"><div class="flex items-center gap-space-xs font-telemetry-sm text-telemetry-sm"><span class="w-2 h-2 rounded-full bg-secondary animate-live-pulse"></span><span class="text-on-surface-variant font-label-caps text-label-caps">WS:</span><span class="text-secondary font-medium">CONECTADO</span></div><div class="w-px h-4 bg-surface-container-high"></div><div class="flex items-center gap-space-xs font-telemetry-sm text-telemetry-sm"><span class="text-on-surface-variant font-label-caps text-label-caps">VUELOS:</span><span class="text-on-surface font-semibold">42 ACT</span></div><div class="w-px h-4 bg-surface-container-high"></div><div class="flex items-center gap-space-xs font-telemetry-sm text-telemetry-sm"><span class="text-on-surface-variant font-label-caps text-label-caps">PUERTAS:</span><span class="text-secondary-fixed-dim font-semibold">8 LIB</span></div><div class="w-px h-4 bg-surface-container-high"></div><div class="flex items-center gap-space-xs font-telemetry-sm text-telemetry-sm"><span class="text-on-surface-variant font-label-caps text-label-caps">EVT/MIN:</span><span class="text-primary font-semibold">128</span></div><div class="w-px h-4 bg-surface-container-high"></div><div class="flex items-center gap-space-xs font-telemetry-sm text-telemetry-sm"><span class="text-on-surface-variant font-label-caps text-label-caps">PANEL:</span><span class="text-on-surface font-semibold">6 DISP</span></div></div><div class="flex items-center gap-space-md"><div class="flex flex-col items-end px-space-sm py-1 rounded bg-surface-container-lowest font-telemetry-sm text-telemetry-sm"><div class="flex items-center gap-1.5"><span class="font-label-caps text-label-caps text-primary">UTC</span><span class="text-on-surface font-semibold tabular-nums">18:42:09Z</span></div><div class="flex items-center gap-1.5 text-on-surface-variant"><span class="font-label-caps text-label-caps text-outline">TIJ/PST</span><span class="tabular-nums">10:42:09</span></div></div><div class="hidden 2xl:flex items-center gap-space-xs"><button class="px-space-sm py-1.5 rounded bg-primary text-on-primary font-label-caps text-label-caps hover:bg-primary-container hover:text-on-primary-container transition-colors flex items-center gap-1" type="button">+ Crear vuelo</button><button class="px-space-sm py-1.5 rounded bg-surface-container-high text-on-surface font-label-caps text-label-caps hover:bg-surface-bright hover:text-on-surface transition-colors" type="button">Niebla +20</button><button class="px-space-sm py-1.5 rounded bg-surface-container-high text-error font-label-caps text-label-caps hover:bg-error-container hover:text-on-error-container transition-colors" type="button">Caos</button><button class="px-space-sm py-1.5 rounded bg-surface-container-high text-on-surface font-label-caps text-label-caps hover:bg-surface-bright hover:text-on-surface transition-colors" type="button">Fuera de orden</button><button class="p-1.5 rounded bg-surface-container-high text-on-surface hover:bg-surface-bright hover:text-on-surface transition-colors" title="Refrescar" type="button"><span class="material-symbols-outlined text-[18px]">refresh</span></button></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><aside class="fixed left-0 top-20 bottom-0 w-64 bg-surface-container-low z-40 flex flex-col justify-between py-space-md"><div class="flex flex-col gap-space-xs"><div class="px-space-lg pb-space-xs font-label-caps text-label-caps text-outline tracking-wider uppercase">Navegación Radar</div><nav class="flex flex-col gap-1 px-space-sm" data-active-classes="bg-primary-container text-on-primary-container font-semibold"><a aria-current="page" class="flex items-center justify-between px-space-md py-space-sm rounded transition-colors bg-primary-container text-on-primary-container font-semibold" data-path="live-operations" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-[20px]">radar</span><span>Operaciones en Vivo</span></div><span class="w-1.5 h-1.5 rounded-full bg-secondary"></span></a><a class="flex items-center px-space-md py-space-sm rounded font-body-md text-body-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="flight-strips" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-[20px]">view_kanban</span><span>Fichas de Vuelo</span></div></a><a class="flex items-center px-space-md py-space-sm rounded font-body-md text-body-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="runway-apron" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-[20px]">flight_takeoff</span><span>Pista &amp; Plataforma</span></div></a><a class="flex items-center px-space-md py-space-sm rounded font-body-md text-body-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="weather-telemetry" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-[20px]">air</span><span>METAR / Clima</span></div></a><a class="flex items-center px-space-md py-space-sm rounded font-body-md text-body-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="system-logs" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-[20px]">terminal</span><span>Registro de Eventos</span></div></a></nav></div><div class="px-space-md flex flex-col gap-space-xs"><div class="p-space-sm rounded bg-surface-container-lowest font-telemetry-sm text-telemetry-sm text-on-surface-variant flex flex-col gap-1"><div class="flex justify-between items-center"><span class="font-label-caps text-label-caps text-outline">ESTACIÓN</span><span class="text-primary font-bold">TIJ / MMTJ</span></div><div class="flex justify-between items-center"><span class="font-label-caps text-label-caps text-outline">PISTA ACTIVA</span><span class="text-secondary font-bold">RWY 09/27</span></div><div class="flex justify-between items-center"><span class="font-label-caps text-label-caps text-outline">ELEVACIÓN</span><span class="text-on-surface">491 FT</span></div></div></div></aside><div class="pl-64"><main class="relative pt-20 w-full min-h-screen bg-surface px-gutter-desktop py-space-md"><div class="flex flex-col w-full relative">
+<!-- DASHBOARD BACKGROUND: FLIGHT MONITOR & RUNWAY KANBAN (TACTICAL AIRPORT INTERFACE) -->
+<div class="grid grid-cols-12 gap-space-md w-full filter blur-[3px] select-none pointer-events-none opacity-40">
+<!-- Active Runway 09/27 Status Strip -->
+<div class="col-span-12 bg-surface-container p-space-sm rounded-lg flex items-center justify-between shadow-sm">
+<div class="flex items-center gap-space-md">
+<span class="font-label-caps text-label-caps text-outline uppercase tracking-wider">Sector RWY 09/27</span>
+<div class="flex items-center gap-space-xs font-telemetry-sm text-telemetry-sm">
+<span class="px-space-xs py-0.5 rounded bg-secondary/15 text-secondary font-semibold">ACTIVA 27</span>
+<span class="text-on-surface-variant">VIENTO: 280°/12KT</span>
+<span class="text-on-surface-variant">VIS: 10SM</span>
+<span class="text-on-surface-variant">RVR: &gt;6000FT</span>
+</div>
+</div>
+<div class="flex items-center gap-space-sm">
+<div class="w-48 h-2 rounded-full bg-surface-container-highest flex overflow-hidden">
+<div class="h-full bg-secondary w-2/3"></div>
+<div class="h-full bg-primary w-1/6"></div>
+<div class="h-full bg-surface-variant w-1/6"></div>
+</div>
+<span class="font-label-caps text-label-caps text-secondary font-bold">CAPACIDAD 82%</span>
+</div>
+</div>
+<!-- Column 1: Boarding / Ground -->
+<div class="col-span-4 bg-surface-container-low p-space-md rounded-xl flex flex-col gap-space-sm">
+<div class="flex items-center justify-between pb-space-xs">
+<span class="font-headline-md text-headline-md text-on-surface font-semibold">En Puerta / Abordando</span>
+<span class="font-telemetry-sm text-telemetry-sm px-space-xs py-0.5 rounded bg-surface-container-high text-primary">04</span>
+</div>
+<div class="bg-surface-container p-space-sm rounded-lg flex flex-col gap-1 shadow-sm">
+<div class="flex justify-between items-center">
+<span class="font-telemetry-md text-telemetry-md text-primary font-bold">VOI-512</span>
+<span class="font-label-caps text-label-caps text-secondary bg-secondary/15 px-1.5 py-0.5 rounded">ABORDANDO</span>
+</div>
+<div class="flex justify-between font-body-sm text-body-sm text-on-surface-variant">
+<span>TIJ → GDL</span>
+<span class="font-telemetry-sm text-telemetry-sm text-on-surface">Pta 02 • A320</span>
+</div>
+</div>
+<div class="bg-surface-container p-space-sm rounded-lg flex flex-col gap-1 shadow-sm">
+<div class="flex justify-between items-center">
+<span class="font-telemetry-md text-telemetry-md text-primary font-bold">AMX-184</span>
+<span class="font-label-caps text-label-caps text-tertiary-container bg-tertiary-container/15 px-1.5 py-0.5 rounded">PROGRAMADO</span>
+</div>
+<div class="flex justify-between font-body-sm text-body-sm text-on-surface-variant">
+<span>TIJ → CSL</span>
+<span class="font-telemetry-sm text-telemetry-sm text-on-surface">Pta 07 • E190</span>
+</div>
+</div>
+</div>
+<!-- Column 2: Active Demorados / Held -->
+<div class="col-span-4 bg-surface-container-low p-space-md rounded-xl flex flex-col gap-space-sm">
+<div class="flex items-center justify-between pb-space-xs">
+<span class="font-headline-md text-headline-md text-on-surface font-semibold">Demorados &amp; En Espera</span>
+<span class="font-telemetry-sm text-telemetry-sm px-space-xs py-0.5 rounded bg-surface-container-high text-primary-fixed">03</span>
+</div>
+<div class="bg-surface-container-high p-space-sm rounded-lg flex flex-col gap-1 shadow-md">
+<div class="flex justify-between items-center">
+<span class="font-telemetry-md text-telemetry-md text-primary font-bold">TJ-101</span>
+<span class="font-label-caps text-label-caps text-primary-container bg-primary-container/20 px-1.5 py-0.5 rounded font-bold">DEMORADO</span>
+</div>
+<div class="flex justify-between font-body-sm text-body-sm text-on-surface-variant">
+<span>TIJ → SEA</span>
+<span class="font-telemetry-sm text-telemetry-sm text-on-surface">Pta 05 • B739</span>
+</div>
+</div>
+<div class="bg-surface-container p-space-sm rounded-lg flex flex-col gap-1 shadow-sm">
+<div class="flex justify-between items-center">
+<span class="font-telemetry-md text-telemetry-md text-primary font-bold">VIV-2032</span>
+<span class="font-label-caps text-label-caps text-primary-container bg-primary-container/15 px-1.5 py-0.5 rounded">DEMORADO</span>
+</div>
+<div class="flex justify-between font-body-sm text-body-sm text-on-surface-variant">
+<span>TIJ → MTY</span>
+<span class="font-telemetry-sm text-telemetry-sm text-on-surface">Pta 09 • A321</span>
+</div>
+</div>
+</div>
+<!-- Column 3: Active Taxi & Airborne -->
+<div class="col-span-4 bg-surface-container-low p-space-md rounded-xl flex flex-col gap-space-sm">
+<div class="flex items-center justify-between pb-space-xs">
+<span class="font-headline-md text-headline-md text-on-surface font-semibold">Rodaje / Pista / Salidas</span>
+<span class="font-telemetry-sm text-telemetry-sm px-space-xs py-0.5 rounded bg-surface-container-high text-secondary">05</span>
+</div>
+<div class="bg-surface-container p-space-sm rounded-lg flex flex-col gap-1 shadow-sm">
+<div class="flex justify-between items-center">
+<span class="font-telemetry-md text-telemetry-md text-primary font-bold">DAL-942</span>
+<span class="font-label-caps text-label-caps text-primary bg-primary/15 px-1.5 py-0.5 rounded">EN RODAJE</span>
+</div>
+<div class="flex justify-between font-body-sm text-body-sm text-on-surface-variant">
+<span>TIJ → SLC</span>
+<span class="font-telemetry-sm text-telemetry-sm text-on-surface">Taxiway A • B738</span>
+</div>
+</div>
+<div class="bg-surface-container p-space-sm rounded-lg flex flex-col gap-1 shadow-sm">
+<div class="flex justify-between items-center">
+<span class="font-telemetry-md text-telemetry-md text-primary font-bold">VOI-774</span>
+<span class="font-label-caps text-label-caps text-secondary bg-secondary/15 px-1.5 py-0.5 rounded">DESPEGADO</span>
+</div>
+<div class="flex justify-between font-body-sm text-body-sm text-on-surface-variant">
+<span>TIJ → MEX</span>
+<span class="font-telemetry-sm text-telemetry-sm text-on-surface">FL180 • FLIGHT-LEV</span>
+</div>
+</div>
+</div>
+</div>
+<!-- MODAL BACKDROP & HIGH-CONTRAST FLIGHT DETAIL MODAL IN FOCUS -->
+<div class="fixed inset-0 z-50 flex items-center justify-center p-space-md bg-surface-container-lowest/80 backdrop-blur-md" id="flight-modal-wrapper">
+<div class="relative w-full max-w-4xl max-h-[942px] flex flex-col bg-surface-container-low rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+<!-- SUBTLE RADIAL AMBIENT GLOW (BACKGROUND TEXTURE) -->
+<div class="absolute -top-32 -right-32 w-80 h-80 rounded-full bg-primary/10 blur-3xl pointer-events-none"></div>
+<div class="absolute -bottom-24 -left-24 w-72 h-72 rounded-full bg-secondary/5 blur-2xl pointer-events-none"></div>
+<!-- MODAL HEADER -->
+<div class="relative z-10 px-space-lg py-space-md bg-surface-container flex items-center justify-between shrink-0 shadow-sm">
+<div class="flex items-center gap-space-md min-w-0">
+<div class="w-10 h-10 rounded bg-surface-container-highest flex items-center justify-center text-primary shrink-0 shadow-inner">
+<span class="material-symbols-outlined text-[24px]">flight_takeoff</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-space-sm flex-wrap">
+<span class="font-headline-lg text-headline-lg font-bold text-on-surface tracking-tight">TJ-101 → SEA</span>
+<span class="px-space-xs py-0.5 rounded bg-primary-container/20 text-primary-container font-label-caps text-label-caps flex items-center gap-1.5 font-bold">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container animate-live-pulse"></span>
+                DEMORADO
+              </span>
+<span class="font-label-caps text-label-caps px-space-xs py-0.5 rounded bg-surface-container-highest text-on-surface-variant uppercase">
+                IFR ACTIVO
+              </span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant truncate">
+              Aeroméxico — Tijuana (MMTJ / TIJ) a Seattle/Tacoma International (KSEA / SEA)
+            </span>
+</div>
+</div>
+<!-- Close Icon Button -->
+<button aria-label="Cerrar ventana" class="w-9 h-9 rounded-lg bg-surface-container-highest text-on-surface-variant hover:text-on-surface hover:bg-surface-bright flex items-center justify-center transition-colors" id="btn-close-modal-top" type="button">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</div>
+<!-- SCROLLABLE INTERACTIVE BODY CONTENT -->
+<div class="p-space-lg overflow-y-auto flex flex-col gap-space-lg relative z-10">
+<!-- TELEMETRY GRID (HIGH-DENSITY DATA TABLE) -->
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<span class="font-label-caps text-label-caps text-outline uppercase tracking-wider">Telemetría Operativa y Despacho</span>
+<span class="font-telemetry-sm text-telemetry-sm text-on-surface-variant">SQUAWK: <span class="text-primary font-bold">4271</span></span>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-space-xs bg-surface-container-lowest p-space-xs rounded-xl">
+<!-- Cell 1 -->
+<div class="bg-surface-container p-space-sm rounded flex flex-col gap-0.5">
+<span class="font-label-caps text-label-caps text-on-surface-variant">ESTADO GENERAL</span>
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-primary-container"></span>
+<span class="font-telemetry-md text-telemetry-md text-primary-container font-bold">Demorado (+15 min)</span>
+</div>
+</div>
+<!-- Cell 2 -->
+<div class="bg-surface-container p-space-sm rounded flex flex-col gap-0.5">
+<span class="font-label-caps text-label-caps text-on-surface-variant">AEROLÍNEA</span>
+<span class="font-telemetry-md text-telemetry-md text-on-surface font-semibold">Aeroméxico (AMX)</span>
+</div>
+<!-- Cell 3 -->
+<div class="bg-surface-container p-space-sm rounded flex flex-col gap-0.5">
+<span class="font-label-caps text-label-caps text-on-surface-variant">AERONAVE / MATRÍCULA</span>
+<span class="font-telemetry-md text-telemetry-md text-on-surface font-semibold">B737 MAX 9 <span class="text-primary text-xs">(XA-TIJ)</span></span>
+</div>
+<!-- Cell 4 -->
+<div class="bg-surface-container p-space-sm rounded flex flex-col gap-0.5">
+<span class="font-label-caps text-label-caps text-on-surface-variant">PUERTA ACTUAL</span>
+<span class="font-telemetry-md text-telemetry-md text-secondary font-bold" id="label-puerta-actual">puerta_5</span>
+</div>
+<!-- Cell 5 -->
+<div class="bg-surface-container p-space-sm rounded flex flex-col gap-0.5">
+<span class="font-label-caps text-label-caps text-on-surface-variant">HORA PROGRAMADA (STD)</span>
+<span class="font-telemetry-md text-telemetry-md text-on-surface tabular-nums">14:15 Local <span class="text-outline text-xs">(22:15Z)</span></span>
+</div>
+<!-- Cell 6 -->
+<div class="bg-surface-container p-space-sm rounded flex flex-col gap-0.5">
+<span class="font-label-caps text-label-caps text-on-surface-variant">HORA ESTIMADA (ETD)</span>
+<span class="font-telemetry-md text-telemetry-md text-primary-container font-bold tabular-nums" id="label-hora-estimada">14:30 Local <span class="text-outline text-xs font-normal">(22:30Z)</span></span>
+</div>
+<!-- Cell 7 -->
+<div class="bg-surface-container p-space-sm rounded flex flex-col gap-0.5">
+<span class="font-label-caps text-label-caps text-on-surface-variant">DEMORA ACUMULADA</span>
+<span class="font-telemetry-md text-telemetry-md text-primary-container font-bold tabular-nums" id="label-demora-acumulada">15 min</span>
+</div>
+<!-- Cell 8 -->
+<div class="bg-surface-container p-space-sm rounded flex flex-col gap-0.5">
+<span class="font-label-caps text-label-caps text-on-surface-variant">PISTA ASIGNADA</span>
+<span class="font-telemetry-md text-telemetry-md text-secondary font-bold">RWY 27 <span class="text-on-surface-variant font-normal text-xs">(Salida 27L)</span></span>
+</div>
+<!-- Cell Motivos Full-Width -->
+<div class="col-span-2 md:col-span-4 bg-surface-container p-space-sm rounded flex items-center justify-between gap-space-md">
+<div class="flex items-center gap-space-sm min-w-0">
+<span class="material-symbols-outlined text-[18px] text-primary-container shrink-0">info</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant shrink-0">MOTIVOS:</span>
+<span class="font-body-md text-body-md text-on-surface truncate">Congestión de pista y secuencia de control de flujo en espacio aéreo MMTJ / FIR Mazatlán</span>
+</div>
+<span class="font-label-caps text-label-caps text-outline shrink-0">ATCSCC TIER-1</span>
+</div>
+</div>
+</div>
+<!-- OPERATIONAL ACTIONS PER STATE (LEGAL ACTIONS BLOCK) -->
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<span class="font-label-caps text-label-caps text-outline uppercase tracking-wider">Acciones Legales Según el Estado Actual</span>
+<span class="font-label-caps text-label-caps text-secondary font-medium">PROTOCOLO ATC ACTIVO</span>
+</div>
+<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-space-xs">
+<!-- Action: Abordar (Violet) -->
+<button class="group flex flex-col items-center justify-center p-space-sm rounded-lg bg-surface-container hover:bg-tertiary-container hover:text-on-tertiary-container transition-all shadow-sm" id="btn-action-abordar" type="button">
+<span class="material-symbols-outlined text-[20px] text-tertiary group-hover:text-on-tertiary-container">airline_seat_recline_normal</span>
+<span class="font-label-caps text-label-caps font-bold mt-1">Abordar</span>
+<span class="font-telemetry-sm text-[10px] opacity-75">Comenzar Pax</span>
+</button>
+<!-- Action: Despegar (Cyan) -->
+<button class="group flex flex-col items-center justify-center p-space-sm rounded-lg bg-surface-container hover:bg-primary-container hover:text-on-primary-container transition-all shadow-sm" id="btn-action-despegar" type="button">
+<span class="material-symbols-outlined text-[20px] text-primary-container group-hover:text-on-primary-container">flight_takeoff</span>
+<span class="font-label-caps text-label-caps font-bold mt-1">Despegar</span>
+<span class="font-telemetry-sm text-[10px] opacity-75">Autorizar RWY 27</span>
+</button>
+<!-- Action: Aterrizar (Green) -->
+<button class="group flex flex-col items-center justify-center p-space-sm rounded-lg bg-surface-container hover:bg-secondary-container hover:text-on-secondary-container transition-all shadow-sm" id="btn-action-aterrizar" type="button">
+<span class="material-symbols-outlined text-[20px] text-secondary group-hover:text-on-secondary-container">flight_land</span>
+<span class="font-label-caps text-label-caps font-bold mt-1">Aterrizar</span>
+<span class="font-telemetry-sm text-[10px] opacity-75">Inbound TIJ</span>
+</button>
+<!-- Action: +20 min (Amber / Warning) -->
+<button class="group flex flex-col items-center justify-center p-space-sm rounded-lg bg-surface-container hover:bg-primary hover:text-on-primary transition-all shadow-sm" id="btn-action-mas20" type="button">
+<span class="material-symbols-outlined text-[20px] text-primary group-hover:text-on-primary">more_time</span>
+<span class="font-label-caps text-label-caps font-bold mt-1">+20 min</span>
+<span class="font-telemetry-sm text-[10px] opacity-75">Extender Espera</span>
+</button>
+<!-- Action: Quitar demora (Neutral Slate) -->
+<button class="group flex flex-col items-center justify-center p-space-sm rounded-lg bg-surface-container hover:bg-surface-bright hover:text-on-surface transition-all shadow-sm" id="btn-action-quitar-demora" type="button">
+<span class="material-symbols-outlined text-[20px] text-on-surface-variant group-hover:text-on-surface">restart_alt</span>
+<span class="font-label-caps text-label-caps font-bold mt-1">Quitar Demora</span>
+<span class="font-telemetry-sm text-[10px] opacity-75">Restablecer 0m</span>
+</button>
+<!-- Action: Cancelar (Red / Destructive) -->
+<button class="group flex flex-col items-center justify-center p-space-sm rounded-lg bg-error-container/40 text-error hover:bg-error hover:text-on-error transition-all shadow-sm" id="btn-action-cancelar" type="button">
+<span class="material-symbols-outlined text-[20px]">cancel</span>
+<span class="font-label-caps text-label-caps font-bold mt-1">Cancelar</span>
+<span class="font-telemetry-sm text-[10px] opacity-75">Abortar Vuelo</span>
+</button>
+</div>
+</div>
+<!-- INTERACTIVE MODULE: CAMBIAR PUERTA Y DEMORA -->
+<div class="bg-surface-container p-space-md rounded-xl flex flex-col gap-space-sm shadow-sm">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-primary text-[20px]">tune</span>
+<span class="font-headline-md text-headline-md text-on-surface font-semibold">Cambiar puerta y demora</span>
+</div>
+<form class="flex flex-col gap-space-sm" id="form-flight-update" onsubmit="event.preventDefault();">
+<div class="grid grid-cols-1 md:grid-cols-12 gap-space-md items-end">
+<!-- Text input: Puerta de embarque -->
+<div class="md:col-span-5 flex flex-col gap-1">
+<label class="font-label-caps text-label-caps text-on-surface-variant" for="input-puerta">
+                  PUERTA DE EMBARQUE
+                </label>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-3 text-outline text-[18px]">meeting_room</span>
+<input class="w-full bg-surface-container-lowest text-on-surface font-telemetry-md text-telemetry-md pl-10 pr-space-sm py-2 rounded-lg focus:outline-none focus:bg-surface-container-high transition-colors uppercase" id="input-puerta" placeholder="Ej. puerta_8" type="text" value="puerta_5"/>
+</div>
+</div>
+<!-- Number input: Minutos adicionales -->
+<div class="md:col-span-4 flex flex-col gap-1">
+<label class="font-label-caps text-label-caps text-on-surface-variant" for="input-minutos">
+                  MINUTOS ADICIONALES
+                </label>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-3 text-outline text-[18px]">schedule</span>
+<input class="w-full bg-surface-container-lowest text-on-surface font-telemetry-md text-telemetry-md pl-10 pr-space-sm py-2 rounded-lg focus:outline-none focus:bg-surface-container-high transition-colors" id="input-minutos" max="300" min="0" step="5" type="number" value="15"/>
+</div>
+</div>
+<!-- Primary Submit Button -->
+<div class="md:col-span-3">
+<button class="w-full h-10 px-space-md rounded-lg bg-primary-container text-on-primary-container font-headline-md text-telemetry-md font-bold hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-space-xs shadow-md" id="btn-aplicar-cambios" type="button">
+<span class="material-symbols-outlined text-[18px]">check_circle</span>
+<span>Aplicar cambios</span>
+</button>
+</div>
+</div>
+<!-- Official Helper Text -->
+<div class="flex items-start gap-space-xs text-on-surface-variant font-body-sm text-body-sm pt-1">
+<span class="material-symbols-outlined text-[16px] text-primary shrink-0 mt-0.5">help_outline</span>
+<span>Si dejas la puerta vacía se asigna una libre; los minutos se suman a la demora y recalculan la hora estimada.</span>
+</div>
+</form>
+</div>
+<!-- BITÁCORA DEL VUELO (CHRONOLOGICAL AUDIT LOG) -->
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<span class="font-label-caps text-label-caps text-outline uppercase tracking-wider">Bitácora del Vuelo (Audit Log)</span>
+<span class="font-telemetry-sm text-telemetry-sm text-on-surface-variant">WS LOG CHANNEL: TIJ-AMX101-EVT</span>
+</div>
+<div class="bg-surface-container-lowest rounded-xl p-space-sm flex flex-col gap-space-xs max-h-48 overflow-y-auto" id="flight-log-container">
+<!-- Log Entry 1 -->
+<div class="flex items-center justify-between px-space-sm py-1.5 rounded bg-surface-container font-telemetry-sm text-telemetry-sm">
+<div class="flex items-center gap-space-sm min-w-0">
+<span class="material-symbols-outlined text-outline text-[16px] shrink-0">radio_button_checked</span>
+<span class="text-primary font-bold tabular-nums shrink-0">14:10:05</span>
+<span class="text-on-surface truncate">Vuelo registrado en plan de vuelo activo</span>
+</div>
+<span class="font-label-caps text-label-caps text-outline shrink-0 ml-2">ORIGINADOR: SYS</span>
+</div>
+<!-- Log Entry 2 -->
+<div class="flex items-center justify-between px-space-sm py-1.5 rounded bg-surface-container font-telemetry-sm text-telemetry-sm">
+<div class="flex items-center gap-space-sm min-w-0">
+<span class="material-symbols-outlined text-secondary text-[16px] shrink-0">meeting_room</span>
+<span class="text-primary font-bold tabular-nums shrink-0">14:15:20</span>
+<span class="text-on-surface truncate">Puerta 5 asignada por sistema automatizado</span>
+</div>
+<span class="font-label-caps text-label-caps text-secondary shrink-0 ml-2">AUTO-GATE</span>
+</div>
+<!-- Log Entry 3 -->
+<div class="flex items-center justify-between px-space-sm py-1.5 rounded bg-surface-container font-telemetry-sm text-telemetry-sm">
+<div class="flex items-center gap-space-sm min-w-0">
+<span class="material-symbols-outlined text-primary-container text-[16px] shrink-0">warning</span>
+<span class="text-primary font-bold tabular-nums shrink-0">14:22:45</span>
+<span class="text-on-surface truncate">Notificación de demora +15 min por control de flujo TIJ</span>
+</div>
+<span class="font-label-caps text-label-caps text-primary-container shrink-0 ml-2">ATC-FLOW</span>
+</div>
+<!-- Log Entry 4 -->
+<div class="flex items-center justify-between px-space-sm py-1.5 rounded bg-surface-container font-telemetry-sm text-telemetry-sm">
+<div class="flex items-center gap-space-sm min-w-0">
+<span class="material-symbols-outlined text-secondary text-[16px] shrink-0">done_all</span>
+<span class="text-primary font-bold tabular-nums shrink-0">14:25:10</span>
+<span class="text-on-surface truncate">Mensaje WebSocket validado en secuencia correcta (ACK 4921)</span>
+</div>
+<span class="font-label-caps text-label-caps text-secondary shrink-0 ml-2">SYNC OK</span>
+</div>
+</div>
+</div>
+</div>
+<!-- MODAL FOOTER -->
+<div class="px-space-lg py-space-sm bg-surface-container flex items-center justify-between shrink-0 shadow-inner">
+<div class="flex items-center gap-space-sm font-telemetry-sm text-telemetry-sm text-on-surface-variant">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span>ESTADO ATC: <strong class="text-on-surface">SINCRONIZADO EN TIEMPO REAL</strong></span>
+</div>
+<button class="px-space-md py-1.5 rounded-lg bg-surface-container-high text-on-surface font-label-caps text-label-caps hover:bg-surface-bright transition-colors flex items-center gap-1.5" id="btn-close-modal-bottom" type="button">
+<span class="material-symbols-outlined text-[16px]">close</span>
+<span>Cerrar ventana</span>
+</button>
+</div>
+</div>
+</div>
+<!-- INTERACTIVE LOGIC SCRIPT -->
+<script>
+    (function initFlightDetailModal() {
+      const modalWrapper = document.getElementById('flight-modal-wrapper');
+      const btnCloseTop = document.getElementById('btn-close-modal-top');
+      const btnCloseBottom = document.getElementById('btn-close-modal-bottom');
+
+      const inputPuerta = document.getElementById('input-puerta');
+      const inputMinutos = document.getElementById('input-minutos');
+      const btnAplicar = document.getElementById('btn-aplicar-cambios');
+
+      const labelPuertaActual = document.getElementById('label-puerta-actual');
+      const labelHoraEstimada = document.getElementById('label-hora-estimada');
+      const labelDemoraAcumulada = document.getElementById('label-demora-acumulada');
+      const logContainer = document.getElementById('flight-log-container');
+
+      // Actions buttons
+      const btnAbordar = document.getElementById('btn-action-abordar');
+      const btnDespegar = document.getElementById('btn-action-despegar');
+      const btnAterrizar = document.getElementById('btn-action-aterrizar');
+      const btnMas20 = document.getElementById('btn-action-mas20');
+      const btnQuitarDemora = document.getElementById('btn-action-quitar-demora');
+      const btnCancelar = document.getElementById('btn-action-cancelar');
+
+      let currentDelay = 15;
+
+      function appendLog(detail, tag = "DISPATCH", icon = "radio_button_checked") {
+        const now = new Date();
+        const timeStr = [
+          String(now.getHours()).padStart(2, '0'),
+          String(now.getMinutes()).padStart(2, '0'),
+          String(now.getSeconds()).padStart(2, '0')
+        ].join(':');
+
+        const row = document.createElement('div');
+        row.className = "flex items-center justify-between px-space-sm py-1.5 rounded bg-surface-container font-telemetry-sm text-telemetry-sm animate-in fade-in duration-150";
+        row.innerHTML = `
+          <div class="flex items-center gap-space-sm min-w-0">
+            <span class="material-symbols-outlined text-primary text-[16px] shrink-0">${icon}</span>
+            <span class="text-primary font-bold tabular-nums shrink-0">${timeStr}</span>
+            <span class="text-on-surface truncate">${detail}</span>
+          </div>
+          <span class="font-label-caps text-label-caps text-secondary shrink-0 ml-2">${tag}</span>
+        `;
+        logContainer.prepend(row);
+      }
+
+      function recalculateTime(delayMins) {
+        const baseHour = 14;
+        const baseMinute = 15;
+        const totalMinutes = baseHour * 60 + baseMinute + delayMins;
+        const h = Math.floor(totalMinutes / 60) % 24;
+        const m = totalMinutes % 60;
+        const formatted = String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+        labelHoraEstimada.innerHTML = `${formatted} Local <span class="text-outline text-xs font-normal">(${String((h+8)%24).padStart(2, '0')}:${String(m).padStart(2, '0')}Z)</span>`;
+        labelDemoraAcumulada.textContent = `${delayMins} min`;
+      }
+
+      // Handler: Aplicar Cambios
+      if (btnAplicar) {
+        btnAplicar.addEventListener('click', function() {
+          let gateVal = (inputPuerta.value || '').trim();
+          if (!gateVal) {
+            gateVal = 'puerta_libre_asig';
+            inputPuerta.value = gateVal;
+          }
+          labelPuertaActual.textContent = gateVal;
+
+          const additional = parseInt(inputMinutos.value, 10) || 0;
+          currentDelay += additional;
+          recalculateTime(currentDelay);
+
+          appendLog(`Actualización manual: Puerta [${gateVal}], +${additional} min añadidos (Total: ${currentDelay} min)`, "ATC-USER", "update");
+        });
+      }
+
+      // Handler: +20 min Quick Action
+      if (btnMas20) {
+        btnMas20.addEventListener('click', function() {
+          currentDelay += 20;
+          inputMinutos.value = (parseInt(inputMinutos.value, 10) || 0) + 20;
+          recalculateTime(currentDelay);
+          appendLog(`Incremento rápido de espera: +20 min por congestión en rodaje`, "FLOW-HOLD", "more_time");
+        });
+      }
+
+      // Handler: Quitar Demora
+      if (btnQuitarDemora) {
+        btnQuitarDemora.addEventListener('click', function() {
+          currentDelay = 0;
+          inputMinutos.value = 0;
+          recalculateTime(0);
+          appendLog(`Demora eliminada. Vuelo TJ-101 restablecido a horario programado (STD 14:15)`, "FLOW-CLR", "restart_alt");
+        });
+      }
+
+      // Handler: Abordar
+      if (btnAbordar) {
+        btnAbordar.addEventListener('click', function() {
+          appendLog(`Cambio de estado: Inicio de abordaje de pasajeros en ${labelPuertaActual.textContent}`, "BOARDING", "airline_seat_recline_normal");
+        });
+      }
+
+      // Handler: Despegar
+      if (btnDespegar) {
+        btnDespegar.addEventListener('click', function() {
+          appendLog(`Autorización de despegue expedida: TJ-101 viento 280/12kt en RWY 27`, "TOWER-TAKEOFF", "flight_takeoff");
+        });
+      }
+
+      // Handler: Aterrizar
+      if (btnAterrizar) {
+        btnAterrizar.addEventListener('click', function() {
+          appendLog(`Aeronave notificada en aproximación final / aterrizaje registrado`, "APP-LAND", "flight_land");
+        });
+      }
+
+      // Handler: Cancelar
+      if (btnCancelar) {
+        btnCancelar.addEventListener('click', function() {
+          appendLog(`ALERTA: Vuelo TJ-101 CANCELADO por control de operaciones`, "OPS-CANCEL", "cancel");
+        });
+      }
+
+      // Close handlers
+      function closeModal() {
+        if (modalWrapper) {
+          modalWrapper.style.transition = "opacity 0.2s ease, transform 0.2s ease";
+          modalWrapper.style.opacity = "0";
+          setTimeout(function() {
+            modalWrapper.classList.add('hidden');
+          }, 200);
+        }
+      }
+
+      if (btnCloseTop) btnCloseTop.addEventListener('click', closeModal);
+      if (btnCloseBottom) btnCloseBottom.addEventListener('click', closeModal);
+
+      // Close on backdrop click (outside modal card)
+      if (modalWrapper) {
+        modalWrapper.addEventListener('click', function(e) {
+          if (e.target === modalWrapper) {
+            closeModal();
+          }
+        });
+      }
+    })();
+  </script>
+</div></main></div></body></html>

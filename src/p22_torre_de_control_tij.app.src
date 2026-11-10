@@ -1,0 +1,9 @@
+{application, p22_torre_de_control_tij, [
+  {description, "Torre de control TIJ: dashboard de vuelos con gen_statem por vuelo"},
+  {vsn, "0.1.0"},
+  {registered, [p22_torre_de_control_tij_sup, p22_respaldo, p22_eventos,
+                p22_puertas, p22_vuelos_sup, p22_feed, p22_web]},
+  {mod, {p22_torre_de_control_tij_app, []}},
+  {applications, [kernel, stdlib, cowboy, recon]},
+  {env, []}
+]}.
