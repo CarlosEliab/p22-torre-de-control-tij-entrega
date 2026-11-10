@@ -1,5 +1,10 @@
 # Montaje en VM y despliegue
 
+> **Materia:** Programación Lineal  
+> **Alumno:** Rodriguez Peraza Carlos Eliab  
+> **No. Control:** 23212719  
+> **Grupo:** 2-3
+
 Este documento cubre el criterio **“Montaje y ejecución en máquina virtual”**.
 La solución se verificó en **WSL2 con Ubuntu + Erlang/OTP 27**, que es una VM
 Linux gestionada por Windows, y también en Windows nativo con OTP 29. El

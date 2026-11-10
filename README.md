@@ -1,11 +1,15 @@
 # Torre de control TIJ — Proyecto 22
 
+| Materia | Programación Lineal |
+|---|---|
+| **Alumno** | Rodriguez Peraza Carlos Eliab |
+| **No. de control** | 23212719 |
+| **Grupo** | 2-3 |
+
 Tablero de operaciones del Aeropuerto Internacional de Tijuana (TIJ / MMTJ)
 construido en **Erlang/OTP 27** con **cowboy**. Cada vuelo es un proceso
 `gen_statem` independiente, supervisado, con API HTTP, WebSocket en vivo,
 persistencia en disco y un tablero web responsive.
-
-**Autor:** Carlos Eliab Rodríguez Peraza
 
 ---
 

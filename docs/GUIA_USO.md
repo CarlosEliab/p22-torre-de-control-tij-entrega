@@ -1,5 +1,10 @@
 # Torre de control TIJ — manual de uso
 
+> **Materia:** Programación Lineal  
+> **Alumno:** Rodriguez Peraza Carlos Eliab  
+> **No. Control:** 23212719  
+> **Grupo:** 2-3
+
 Tablero en tiempo real de los vuelos del Aeropuerto Internacional de Tijuana
 (TIJ / MMTJ). Cada vuelo es un proceso Erlang (`gen_statem`) y el tablero se
 actualiza por WebSocket, sin recargar la página.
