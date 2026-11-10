@@ -5,6 +5,8 @@
 > **No. Control:** 23212719  
 > **Grupo:** 2-3
 
+**Repositorio:** <https://github.com/CarlosEliab/p22-torre-de-control-tij-entrega>
+
 Tablero en tiempo real de los vuelos del Aeropuerto Internacional de Tijuana
 (TIJ / MMTJ). Cada vuelo es un proceso Erlang (`gen_statem`) y el tablero se
 actualiza por WebSocket, sin recargar la página.
