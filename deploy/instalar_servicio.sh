@@ -25,7 +25,9 @@ USUARIO="${P22_USUARIO:-p22}"
 DESTINO="${P22_DESTINO:-/opt/p22}"
 PUERTO="${P22_PUERTO:-8080}"
 SERVICIO="p22-torre-de-control-tij"
-RELEASE="${PROYECTO}/_build/default/rel/${SERVICIO}"
+# relx nombra la carpeta del release con guiones bajos (nombre de la app).
+APP="p22_torre_de_control_tij"
+RELEASE="${PROYECTO}/_build/default/rel/${APP}"
 
 cd "${PROYECTO}"
 
