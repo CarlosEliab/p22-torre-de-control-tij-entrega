@@ -27,6 +27,7 @@ init(Req0, State) ->
           [maps:get(estado, Info)
            || {_, Info} <- p22_respaldo:todos_vuelos(),
               maps:is_key(estado, Info)]),
+    Demoras = demoras(p22_respaldo:todos_vuelos()),
     Puertas = seguro(fun p22_puertas:estado_completo/0,
                      #{total => 0, libres => [], ocupadas => []}),
     EventosMin =
@@ -52,6 +53,7 @@ init(Req0, State) ->
               #{total => maps:get(total, Puertas),
                 libres => length(maps:get(libres, Puertas)),
                 ocupadas => maps:size(maps:from_list(maps:get(ocupadas, Puertas)))},
+          demoras => Demoras,
           eventos_por_minuto => EventosMin,
           simulacion => Simulacion,
           clientes_tablero =>
@@ -61,6 +63,22 @@ init(Req0, State) ->
           sistema => diagnostico(),
           uptime_segundos => Uptime},
     {ok, p22_http:json(Req0, Metricas), State}.
+
+%% Demora promedio de los vuelos que SI traen demora (minutos).
+%% Se calcula sobre la imagen del respaldo, asi que responde igual
+%% aunque un vuelo este renaciendo tras el caos.
+demoras(Vuelos) ->
+    Minutos = [M || {_, Info} <- Vuelos,
+                    M <- [maps:get(demora_min, maps:get(datos, Info, #{}), 0)],
+                    is_integer(M), M > 0],
+    case Minutos of
+        [] ->
+            #{promedio_min => 0, maxima_min => 0, con_demora => 0};
+        _ ->
+            #{promedio_min => round(lists:sum(Minutos) / length(Minutos)),
+              maxima_min => lists:max(Minutos),
+              con_demora => length(Minutos)}
+    end.
 
 %% Estado del bus sin tumbar /metrics si esta reiniciando.
 bus_estado() ->

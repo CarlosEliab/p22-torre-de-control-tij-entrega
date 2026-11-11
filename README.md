@@ -313,7 +313,7 @@ curl -s -X POST localhost:8080/api/demo/fuera_de_orden
 | `/api/simulacion/pausar` | POST | Pausa el feed |
 | `/api/simulacion/reanudar` | POST | Reanuda el feed |
 | `/api/demo/:accion` | POST | `niebla`, `caos`, `fuera_de_orden`, `pausar`, `reanudar` |
-| `/metrics` | GET | Métricas para monitoreo |
+| `/metrics` | GET | Métricas para monitoreo (estados, puertas, **demora promedio**, eventos/min) |
 | `/health` | GET | Sonda simple para AWS/systemd |
 | `/ws` | WebSocket | Cambios en tiempo real |
 

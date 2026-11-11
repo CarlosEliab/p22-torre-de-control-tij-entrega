@@ -94,7 +94,7 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 .content{width:100%;max-width:1800px;margin:0 auto;padding:1.2rem 1.5rem 2rem}
 
 /* ---------- indicadores ---------- */
-.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.6rem;
+.kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:.6rem;
   margin-bottom:.9rem}
 .kpi{position:relative;overflow:hidden;padding:.7rem .85rem;
   background:var(--surface-container);border:1px solid var(--outline-variant);
@@ -104,7 +104,8 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 .kpi.vuelos{--kpi-color:var(--primary-container)}
 .kpi.puertas{--kpi-color:var(--secondary)}
 .kpi.eventos{--kpi-color:var(--tertiary)}
-.kpi.clientes{--kpi-color:var(--demorado)}
+.kpi.clientes{--kpi-color:var(--primary)}
+.kpi.demora{--kpi-color:var(--demorado)}
 .kpi-label{display:block;font-family:var(--mono);font-size:.58rem;font-weight:700;
   letter-spacing:.1em;text-transform:uppercase;color:var(--outline)}
 .kpi b{display:block;margin-top:.18rem;font-family:var(--mono);font-size:1.55rem;
@@ -387,10 +388,15 @@ dialog .modal-body button:hover{background:rgba(56,189,248,.20)}
           <b id="s-puertas">–</b>
           <small>disponibles</small>
         </article>
-        <article class="kpi eventos">
+        <article class="kpi eventos" title="Eventos publicados en el bus de la torre (cambios de estado, puertas, alertas y caos) durante los ultimos 60 segundos">
           <span class="kpi-label">Eventos / min</span>
           <b id="s-evm">–</b>
-          <small>actividad del bus</small>
+          <small>cambios publicados, 60 s</small>
+        </article>
+        <article class="kpi demora" title="demoras.promedio_min de /metrics: promedio de demora de los vuelos demorados">
+          <span class="kpi-label">Demora promedio</span>
+          <b id="s-demora">–</b>
+          <small>min · vuelos demorados</small>
         </article>
         <article class="kpi clientes">
           <span class="kpi-label">Tableros conectados</span>
@@ -403,11 +409,11 @@ dialog .modal-body button:hover{background:rgba(56,189,248,.20)}
         <div>
           <span class="eyebrow">Control de operación</span>
           <h2>Acciones de torre</h2>
-          <p>Inyecta fallas del feed simulado y refresca el tablero.</p>
+          <p>Inyecta fallas del feed simulado y refresca el tablero. <b>Caos</b> mata un vuelo al azar para probar la reconstruccion.</p>
         </div>
         <div class="acciones">
           <button class="btn" onclick="demo('niebla')">Niebla +20</button>
-          <button class="btn btn-peligro" onclick="demo('caos')">Caos</button>
+          <button class="btn btn-peligro" onclick="demo('caos')" title="Mata el proceso de un vuelo al azar: el supervisor lo reinicia con su ultimo estado y su puerta, y el tablero no parpadea">Caos</button>
           <button class="btn" onclick="demo('fuera_de_orden')">Fuera de orden</button>
           <button class="btn btn-secundario" onclick="refrescarTodo()">Refrescar</button>
         </div>
@@ -417,7 +423,7 @@ dialog .modal-body button:hover{background:rgba(56,189,248,.20)}
         <div>
           <span class="eyebrow">Simulación</span>
           <h2>Ritmo y nuevos vuelos</h2>
-          <p>Ajusta la velocidad en caliente y controla cuándo entra cada vuelo.</p>
+          <p>Ajusta la velocidad en caliente y controla cuándo entra cada vuelo. Tope de 14 vuelos vivos a la vez; al aterrizar o cancelarse, el vuelo sale del tablero.</p>
         </div>
         <div class="sim-panel">
           <div class="sim-fila">
@@ -801,6 +807,9 @@ async function metricas(){
     const r=await fetch("/metrics"); const m=await r.json();
     document.getElementById("s-puertas").textContent=m.puertas.libres;
     document.getElementById("s-evm").textContent=m.eventos_por_minuto;
+    const d=document.getElementById("s-demora");
+    if(d) d.textContent=(m.demoras&&m.demoras.promedio_min!=null)
+      ? m.demoras.promedio_min : "–";
     document.getElementById("s-cli").textContent=m.clientes_tablero;
   }catch(_){}
 }

@@ -159,6 +159,7 @@ Abrir `http://localhost:8080/metrics`:
 
 - `vuelos.por_estado`
 - `puertas` libres/ocupadas
+- `demoras.promedio_min` (y `maxima_min`, `con_demora`)
 - `eventos_por_minuto`
 - `clientes_tablero`
 - `tipo_cambio_puerta`

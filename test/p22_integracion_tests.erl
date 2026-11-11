@@ -64,6 +64,14 @@ arbol_completo_web_test_() ->
                ?assertEqual(200, status(RM)),
                ?assert(maps:is_key(<<"vuelos">>, contenido(RM))),
                ?assert(maps:is_key(<<"puertas">>, contenido(RM))),
+               %% demora promedio (la pide la rubrica del curso)
+               ?assert(maps:is_key(<<"demoras">>, contenido(RM))),
+               Demoras = maps:get(<<"demoras">>, contenido(RM)),
+               ?assert(maps:is_key(<<"promedio_min">>, Demoras)),
+               %% demora promedio (la pide la rubrica del curso)
+               ?assert(maps:is_key(<<"demoras">>, contenido(RM))),
+               Demoras = maps:get(<<"demoras">>, contenido(RM)),
+               ?assert(maps:is_key(<<"promedio_min">>, Demoras)),
 
                %% GET /health: sonda de AWS/systemd
                RH = consultar(<<"GET">>, <<"/health">>, <<>>),

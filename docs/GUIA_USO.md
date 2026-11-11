@@ -126,7 +126,10 @@ mismo sistema operativo donde se va a ejecutar (Linux para Linux).
   cliente reintenta cada 2 segundos.
 - **Vuelos:** total de vuelos en memoria.
 - **Puertas libres:** de las 20 configuradas.
-- **Eventos/min:** actividad del bus.
+- **Eventos/min:** eventos publicados en el bus de la torre en los
+  últimos 60 segundos (cambios de estado, puertas, alertas y caos).
+- **Demora promedio:** promedio de minutos de demora de los vuelos
+  demorados (`demoras.promedio_min` en `/metrics`).
 - **Tableros conectados:** clientes WebSocket activos.
 
 ### Columnas

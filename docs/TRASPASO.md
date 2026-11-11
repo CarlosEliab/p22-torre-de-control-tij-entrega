@@ -554,7 +554,8 @@ suscriptores. Cada suscriptor se monitorea y se elimina solo al morir.
 ### `/metrics`
 
 Incluye `vuelos.por_estado`, `puertas` (libres/ocupadas/total),
-`eventos_por_minuto`, `clientes_tablero`, contadores por tipo, estado del bus,
+`eventos_por_minuto`, `demoras` (promedio y máxima de los vuelos
+demorados), `clientes_tablero`, contadores por tipo, estado del bus,
 `uptime_segundos` y `sistema` con `recon` (procesos, memoria, top 5 por memoria
 y reducciones).
 
