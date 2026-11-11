@@ -62,8 +62,8 @@ texto = texto.replace("](problema/", f"]({blob}/problema/")
 open(destino, "w", encoding="utf-8").write(texto)
 PY
 
-cp "${PROYECTO}/docs/GUIA_USO.md" "${GIST_DIR}/GUIA_USO.md"
-cp "${PROYECTO}/docs/VM_Y_DESPLIEGUE.md" "${GIST_DIR}/VM_Y_DESPLIEGUE.md"
+cp "${PROYECTO}/docs/GUIA_USO.md" "${GIST_DIR}/guia_uso.md"
+cp "${PROYECTO}/docs/VM_Y_DESPLIEGUE.md" "${GIST_DIR}/vm_y_despliegue.md"
 cp "${PROYECTO}/src/p22_vuelo_statem.erl" "${GIST_DIR}/p22_vuelo_statem.erl"
 cp "${PROYECTO}/src/p22_feed.erl" "${GIST_DIR}/p22_feed.erl"
 cp "${PROYECTO}/src/p22_torre_de_control_tij_sup.erl" "${GIST_DIR}/p22_torre_de_control_tij_sup.erl"
@@ -76,8 +76,8 @@ cp "${PROYECTO}/test/p22_caos_tests.erl" "${GIST_DIR}/p22_caos_tests.erl"
 
 ARCHIVOS=(
     README.md
-    GUIA_USO.md
-    VM_Y_DESPLIEGUE.md
+    guia_uso.md
+    vm_y_despliegue.md
     p22_vuelo_statem.erl
     p22_feed.erl
     p22_torre_de_control_tij_sup.erl
