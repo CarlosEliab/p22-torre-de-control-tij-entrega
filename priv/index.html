@@ -414,7 +414,7 @@ dialog .modal-body button:hover{background:rgba(56,189,248,.20)}
         <div class="acciones">
           <button class="btn" onclick="demo('niebla')">Niebla +20</button>
           <button class="btn btn-peligro" onclick="demo('caos')" title="Mata el proceso de un vuelo al azar: el supervisor lo reinicia con su ultimo estado y su puerta, y el tablero no parpadea">Caos</button>
-          <button class="btn" onclick="demo('fuera_de_orden')">Fuera de orden</button>
+          <button class="btn" onclick="demo('fuera_de_orden')" title="Manda un evento con secuencia vieja: el gen_statem detecta que llega tarde y lo ignora (evento_ignorado), sin tocar el estado del vuelo">Fuera de orden</button>
           <button class="btn btn-secundario" onclick="refrescarTodo()">Refrescar</button>
         </div>
       </section>

@@ -213,7 +213,7 @@ Parámetros en [`config/sys.config`](config/sys.config):
 | `puertas_total` | 20 | puertas físicas |
 | `feed_ms` | 2000 | tick simulado (tiempo comprimido) |
 | `max_vuelos_vivos` | 14 | tope de vuelos operativos |
-| `caos` | true | caos automático (~3 % por tick) |
+| `caos` | false | caos automático desactivado: se dispara a mano |
 | `persistir` | true | respaldo en disco |
 | `archivo_respaldo` | `data/p22_respaldo.bin` | ruta de la foto |
 

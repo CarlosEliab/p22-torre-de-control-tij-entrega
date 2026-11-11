@@ -129,13 +129,10 @@ handle_call(niebla, _From, State) ->
     p22_eventos:publicar(#{tipo => alerta,
                            mensaje => <<"niebla costera: salidas demoradas 20 min">>}),
     {reply, {ok, N}, State};
+%% El caos MANUAL (boton del tablero, API) siempre se ejecuta: el
+%% flag `caos' solo controla la inyeccion aleatoria del tick.
 handle_call(inyectar_caos, _From, State) ->
-    case maps:get(caos, State, true) of
-        false ->
-            {reply, {error, caos_desactivado}, State};
-        true ->
-            {reply, inyectar_caos_base(), State}
-    end;
+    {reply, inyectar_caos_base(), State};
 handle_call(mensaje_fuera_de_orden, _From, State) ->
     {reply, fuera_de_orden_base(), State};
 handle_call(pausar, _From, State) ->
