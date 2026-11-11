@@ -109,8 +109,9 @@ for archivo in "${ARCHIVOS[@]}"; do
     fi
 done
 
-"${GH}" gist edit "${GIST_ID}" \
-    --desc "Torre de control TIJ — Proyecto 22 · ITT · Programación Lógica y Funcional" \
+# `gh gist edit --desc` sin --filename abre el editor; la API es directa.
+"${GH}" api -X PATCH "/gists/${GIST_ID}" \
+    -f description="Torre de control TIJ — Proyecto 22 · ITT · Programación Lógica y Funcional" \
     >/dev/null
 
 echo
