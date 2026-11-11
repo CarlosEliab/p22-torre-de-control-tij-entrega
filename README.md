@@ -1,22 +1,181 @@
 # Torre de control TIJ — Proyecto 22
 
-| Materia | Programación Lineal |
-|---|---|
-| **Alumno** | Rodriguez Peraza Carlos Eliab |
-| **No. de control** | 23212719 |
-| **Grupo** | 2-3 |
+* **Escuela:** Instituto Tecnológico de Tijuana
+* **Materia:** Programación Lógica y Funcional
+* **Docente:** René Solís Reyes
+* **Horario:** 2:00 pm a 3:00 pm
+* **Alumno:** Rodriguez Peraza Carlos Eliab
+* **No. de control:** 23212719
+* **Grupo:** 2-3
 
-Tablero de operaciones del Aeropuerto Internacional de Tijuana (TIJ / MMTJ)
-construido en **Erlang/OTP 27** con **cowboy**. Cada vuelo es un proceso
-`gen_statem` independiente, supervisado, con API HTTP, WebSocket en vivo,
-persistencia en disco y un tablero web responsive.
+**Repositorio:** <https://github.com/CarlosEliab/p22-torre-de-control-tij-entrega>  
+**Gist / manual:** <https://gist.github.com/CarlosEliab/da48ed12e3fbec9f22077040b8227f8d>
 
 ---
 
-## 1. Ejecutar
+### El problema
 
-Requisitos: **Erlang/OTP 27 o superior** y **rebar3**. No se usa Node, Docker ni
-base de datos externa.
+Mantener un tablero confiable del estado de cada vuelo del Aeropuerto
+Internacional de Tijuana (TIJ / MMTJ), aceptar solo transiciones legales,
+resolver mensajes contradictorios o fuera de orden, propagar demoras por
+aeronave y reconstruir el estado si un proceso o la máquina virtual se caen.
+
+El aeropuerto opera con una sola pista y un flujo constante de vuelos. Pasajeros,
+aerolíneas y personal en tierra necesitan ver el mismo estado en tiempo real, sin
+que dos fuentes (torre y aerolínea) dejen el tablero inconsistente.
+
+## 1. Propósito del sistema
+
+Mantener un tablero de operaciones en tiempo real donde **cada vuelo es un
+proceso Erlang independiente** (`gen_statem`), supervisado, con API HTTP,
+WebSocket, bitácora de eventos, persistencia en disco y un panel web responsive.
+
+El sistema permite:
+
+- Consultar los vuelos por estado: `programado`, `demorado`, `abordando`,
+  `despegó`, `aterrizado` y `cancelado`.
+- Aplicar transiciones manuales desde el tablero (la torre “es” el usuario).
+- Cambiar puerta y hora estimada en una sola operación.
+- Inyectar fallas del mundo real: niebla, mensajes fuera de orden y caos
+  (muerte de procesos).
+- **Ajustar la velocidad de la simulación en caliente**, sin reiniciar el
+  servidor, y decidir en cuántos segundos entra cada vuelo nuevo.
+- Recuperar el estado después de un reinicio del nodo o de la VM.
+
+**Usuario cliente:** operador de la torre de control (monitoreo y control) y
+pasajeros/aerolíneas (consulta del tablero).
+
+## 2. Tecnologías
+
+| Capa | Tecnología |
+|---|---|
+| Backend | Erlang/OTP 27, `gen_statem`, `gen_server`, supervisores OTP |
+| Servidor web | Cowboy 2.12 (HTTP + WebSocket) |
+| Interfaz | HTML, CSS y JavaScript en un solo archivo (`priv/index.html`), diseño original en Google Stitch |
+| Persistencia | Tablas ETS + archivo `data/p22_respaldo.bin` |
+| Ejecución | `rebar3 shell`, release de relx y servicio `systemd` en AWS (Ubuntu) |
+| Pruebas | EUnit (`rebar3 eunit`) |
+| Monitoreo | `recon`, `GET /metrics` y `GET /health` |
+
+## 3. Diseño OTP
+
+### Árbol de supervisión
+
+```
+p22_torre_de_control_tij_sup          (rest_for_one)
+├── p22_respaldo                      ETS + persistencia en disco
+├── p22_eventos                       bus de eventos + WebSocket + contadores
+├── p22_puertas                       asignador de puertas (recurso compartido)
+├── p22_vuelos_sup                    (simple_one_for_one)
+│   └── p22_vuelo_statem × N          un proceso por vuelo
+├── p22_feed                          simulación configurable
+└── p22_web                           Cowboy: API, tablero, WebSocket y métricas
+```
+
+El orden importa: con `rest_for_one`, si `p22_respaldo` o `p22_eventos` mueren,
+se reinician también los procesos que dependen de ellos. Así los vuelos nunca
+arrancan sin respaldo, bus o asignador de puertas.
+
+### Quién reinicia a quién y por qué
+
+| Decisión | Justificación |
+|---|---|
+| **Un `gen_statem` por vuelo** | Los mensajes de un vuelo se atienden de uno en uno. Dos transiciones simultáneas no pueden ganar las dos |
+| **Supervisor dinámico `simple_one_for_one`** | El número de vuelos cambia todo el tiempo; el supervisor no conoce la lista en compilación |
+| **Raíz con `rest_for_one`** | El respaldo y el bus son dueños de estado compartido; si mueren, sus dependientes deben reiniciarse |
+| **Estado guardado fuera del vuelo** | Al morir un proceso, el supervisor lo reinicia y `init/1` recupera el último estado desde ETS/disco |
+| **Un asignador de puertas** | La puerta es un recurso finito: una sola operación decide quién la toma y evita dobles asignaciones |
+| **Lecturas desde ETS** | Listar vuelos y métricas no bloquea a los procesos de vuelo |
+| **Persistencia en disco** | Un reinicio de la VM no borra la operación: los vuelos se reconstruyen al arrancar |
+
+### Casos difíciles del problema
+
+| Caso | Cómo se resuelve |
+|---|---|
+| **Mensaje fuera de orden** | Cada fuente lleva una secuencia (`fuente_seq`). Si llega una secuencia vieja, el `gen_statem` la ignora y publica `evento_ignorado` |
+| **Dos fuentes contradicen el estado** | Se aplica una regla de autoridad: la torre manda sobre la aerolínea; la aerolínea no puede “deshacer” una decisión de la torre |
+| **Transición ilegal** | La tabla `legal/1` del `gen_statem` la rechaza por diseño. La API responde `409` y el tablero lo registra |
+| **Cambio de puerta + hora** | Es una sola operación atómica: conserva el estado, libera la puerta anterior, asigna la nueva y recalcula la hora estimada |
+| **Efecto cascada por aeronave** | Si se cancela un vuelo, el `p22_feed` busca el vuelo de regreso de la misma matrícula y lo cancela |
+| **Caos (muere un proceso)** | El supervisor lo reinicia con sus mismos argumentos; `init/1` lo re-entra en el último estado conocido sin que el tablero parpadee |
+| **Reinicio de la VM** | `p22_respaldo` escribe una foto en `data/p22_respaldo.bin`; al arrancar, el feed re-crea un proceso por cada vuelo guardado |
+| **Cientos de clientes** | El tablero lee snapshots de ETS y recibe cambios por WebSocket; no se consulta a cada vuelo por cada cliente |
+
+### Estados y transiciones de un vuelo
+
+```
+programado ──empezar_abordaje──> abordando ──despegar──> despegó ──aterrizar──> aterrizado
+     │                              │
+     ├──demorar──> demorado         └──cancelar──> cancelado
+     │                 │
+     │                 ├──empezar_abordaje──> abordando
+     │                 └──fin_demora──> programado
+     └──cancelar──> cancelado
+```
+
+| Estado | Acciones legales |
+|---|---|
+| `programado` | `empezar_abordaje`, `demorar`, `cambiar_puerta`, `cancelar` |
+| `demorado` | `empezar_abordaje`, `fin_demora`, `cambiar_puerta`, `cancelar` |
+| `abordando` | `despegar`, `cambiar_puerta`, `cancelar` |
+| `despegó` | `aterrizar` |
+| `aterrizado` | terminal: todo se rechaza con explicación |
+| `cancelado` | terminal: todo se rechaza con explicación |
+
+### Simulación configurable
+
+El simulador (`p22_feed`) crea vuelos, los avanza por transiciones legales,
+inyecta demoras y caos, y respeta el **tiempo de permanencia** de cada estado.
+La velocidad se cambia en caliente desde el tablero o la API.
+
+| Perfil | Tick | Vuelo nuevo | Entrada | Abordaje | Vuelo |
+|---|---:|---:|---:|---:|---:|
+| **Muy lento** | 20 s | 120 s | 90 s | 60 s | 150 s |
+| **Lento** (default) | 15 s | 90 s | 60 s | 60 s | 120 s |
+| **Normal** | 8 s | 45 s | 45 s | 40 s | 90 s |
+| **Rápido** | 3 s | 15 s | 15 s | 12 s | 30 s |
+| **Personalizado** | el actual | el que definas | fijo | fijo | fijo |
+
+- `nuevo_vuelo_cada_ms`: cada cuánto se crea un vuelo automático.
+- `espera_entrada_ms`: tiempo en `programado` antes de poder abordar.
+- `abordaje_ms`: tiempo en `abordando` antes de despegar.
+- `vuelo_ms`: tiempo en `despegó` antes de aterrizar.
+- `entrada_seg` (al crear un vuelo): retrasa su entrada N segundos.
+- `hora_programada` (Unix, segundos): fija la hora exacta de entrada.
+
+Un vuelo **no avanza antes de su `hora_programada`**. Esto evita que los vuelos
+nazcan y aterricen en pocos segundos cuando la simulación está en `Lento`.
+
+## 4. Requisitos y acceso
+
+- **Erlang/OTP 27 o superior** y **rebar3**. No se usa Node, Docker ni base de
+  datos externa.
+- Puerto **8080** abierto en el *Security Group* de AWS (entrada TCP).
+- Acceso local: <http://localhost:8080>
+- Acceso en AWS: `http://<IP-PUBLICA-DE-LA-VM>:8080`
+
+> La guía completa de AWS está en [`docs/AWS.md`](docs/AWS.md). Para una VM
+> Ubuntu también puedes usar [`deploy/instalar_servicio.sh`](deploy/instalar_servicio.sh).
+
+## 5. Instalación
+
+```bash
+git clone https://github.com/CarlosEliab/p22-torre-de-control-tij-entrega.git
+cd p22-torre-de-control-tij-entrega
+rebar3 compile
+rebar3 eunit
+```
+
+Resultado esperado de las pruebas:
+
+```text
+Finished in ...
+33 tests, 0 failures
+```
+
+## 6. Ejecución
+
+### Desarrollo
 
 ```bash
 rebar3 compile
@@ -24,231 +183,273 @@ rebar3 eunit
 rebar3 shell
 ```
 
-Abrir <http://localhost:8080>. La aplicación también puede ejecutarse como
-release:
+Al iniciar se muestra el listener de Cowboy en el puerto **8080**. Abre la
+dirección del punto 4 y verifica que el indicador de la esquina superior derecha
+diga **En vivo**.
+
+### Release
 
 ```bash
 rebar3 release
 _build/default/rel/p22_torre_de_control_tij/bin/p22_torre_de_control_tij foreground
 ```
 
----
-
-## 2. Qué hace
-
-- **Seis estados por vuelo:** `programado`, `demorado`, `abordando`, `despego`,
-  `aterrizado`, `cancelado`.
-- **Transiciones legales:** el `gen_statem` rechaza acciones fuera de orden; la
-  API responde `409` y el tablero lo registra.
-- **Cambio de puerta + hora en una sola operación:** conserva el estado actual,
-  libera la puerta anterior y recalcula la hora estimada.
-- **Cascada por aeronave:** un retraso puede propagarse a los vuelos siguientes
-  de la misma aeronave.
-- **Caos y recuperación:** se pueden matar procesos; el supervisor los
-  reconstruye con su estado.
-- **Reinicio de la VM:** respaldo en disco y recuperación de vuelos al arrancar.
-- **Fuentes contradictorias y mensajes repetidos:** se detectan y se ignoran
-  sin corromper el estado.
-- **WebSocket:** snapshot inicial (`resync`) y eventos incrementales sin
-  recargar el tablero.
-- **Métricas:** `/metrics` con `recon` (procesos, memoria, puertas, clientes y
-  eventos por minuto).
-
----
-
-## 3. Diseño OTP
-
-```text
-p22_torre_de_control_tij_sup   (rest_for_one, 10 reinicios / 60 s)
-├── p22_respaldo               gen_server  ETS + persistent_term + archivo
-├── p22_eventos                gen_server  bus de eventos y suscripciones WS
-├── p22_puertas                gen_server  asignador de 20 puertas
-├── p22_vuelos_sup             supervisor  simple_one_for_one
-│   └── p22_vuelo_statem × N   gen_statem  un proceso por vuelo
-├── p22_feed                   gen_server  simulación, niebla y caos
-└── p22_web                    gen_server  cowboy: API, tablero, WS, métricas
-```
-
-**`rest_for_one`:** el orden expresa dependencias. Los vuelos necesitan el
-respaldo, el bus y las puertas; la web necesita el bus. Si cae `p22_respaldo`,
-se reinicia todo lo que depende de él y cada vuelo relee su estado. Si solo cae
-`p22_web`, los vuelos no se tocan.
-
-**`simple_one_for_one`:** el número de vuelos cambia durante el día. Todos
-comparten módulo y arranque; al ser `permanent`, un vuelo muerto se reconstruye
-sin reiniciar a los demás.
-
-**Un proceso por vuelo:** las reglas del ciclo de vida quedan aisladas. Una
-transición ilegal se rechaza en el `gen_statem`, no en el handler HTTP, y la
-caída de un vuelo no afecta al resto del tablero.
-
-**Dónde vive el estado:**
-
-1. El `gen_statem` es la verdad en caliente.
-2. Antes de publicar cada cambio, `p22_respaldo:guardar_vuelo/3` lo escribe en
-   ETS y en `persistent_term`, que sobreviven a la caída del proceso.
-3. Con `persistir = true`, también se escribe en `data/p22_respaldo.bin`, que
-   sobrevive al reinicio de la VM. Al arrancar, el feed crea un proceso por
-   cada vuelo guardado.
-
-La API y el WebSocket consultan al proceso; si está entre reinicios, responden
-con la imagen del respaldo (`de_respaldo: true`). Por eso el tablero no
-parpadea.
-
----
-
-## 4. API
-
-| Método | Ruta | Uso |
-|---|---|---|
-| `GET` | `/` | Tablero web |
-| `GET` | `/api/vuelos` | Lista de vuelos |
-| `POST` | `/api/vuelos` | Crea un vuelo de demostración |
-| `GET` | `/api/vuelos/:id` | Detalle e historial |
-| `POST` | `/api/vuelos/:id/estado` | Aplica una transición |
-| `POST` | `/api/demo/:accion` | `niebla`, `caos`, `fuera_de_orden`, `pausar`, `reanudar` |
-| `GET` | `/ws` | WebSocket del tablero |
-| `GET` | `/metrics` | Métricas y estado del sistema |
-
-Ejemplo de cambio de puerta y demora:
+### Servicio en AWS (systemd)
 
 ```bash
-curl -X POST localhost:8080/api/vuelos/7/estado \
+# desde la raíz del proyecto, en la VM
+sudo ./deploy/instalar_servicio.sh
+systemctl status p22-torre-de-control-tij
+journalctl -u p22-torre-de-control-tij -f
+```
+
+Para empaquetar el proyecto y subirlo por `scp`:
+
+```bash
+./deploy/empaquetar.sh
+# genera dist/p22-torre-de-control-tij.tar.gz sin _build/ ni data/
+```
+
+## 7. Manual de uso
+
+### Panel principal
+
+1. La barra superior muestra el estado de la conexión WebSocket (**En vivo**).
+2. Los indicadores resumen vuelos, puertas libres, eventos por minuto y
+   tableros conectados.
+3. El tablero agrupa los vuelos en seis columnas por estado.
+4. Cada tarjeta muestra identificación, aerolínea, destino, puerta, demora y,
+   si el vuelo aún no entra, una etiqueta **“entra en N s/min”**.
+
+### Panel de simulación
+
+| Control | Uso |
+|---|---|
+| **Velocidad** | `Muy lento`, `Lento`, `Normal`, `Rápido` o `Personalizado` |
+| **Nuevo vuelo cada X s** | Intervalo entre altas automáticas (solo se aplica con perfil personalizado) |
+| **Aplicar ritmo** | Cambia el ritmo en caliente, sin reiniciar |
+| **Pausar / Reanudar** | Congela o reactiva la simulación |
+| **Crear vuelo** | Alta manual con destino, aerolínea y **“entra en X s”** |
+
+El indicador inferior muestra el perfil activo, el próximo vuelo automático y
+cuántos vuelos vivos hay respecto al máximo.
+
+### Detalle de un vuelo
+
+Al pulsar una tarjeta se abre la ficha con:
+
+- Estado actual, aerolínea, aeronave y puerta.
+- Hora programada, hora estimada y demora acumulada.
+- Botones con las **transiciones legales** de ese estado.
+- **Cambio de puerta + minutos de demora** en una sola operación.
+- Bitácora del vuelo con los últimos movimientos.
+
+### Bitácora de eventos
+
+Registro cronológico de altas, cambios de estado, cambios de puerta, caos,
+eventos ignorados por secuencia vieja y alertas de niebla.
+
+### Acciones de torre
+
+| Botón | Efecto |
+|---|---|
+| **Niebla +20** | Demora 20 minutos todos los vuelos programados |
+| **Caos** | Mata un proceso de vuelo al azar para validar la reconstrucción |
+| **Fuera de orden** | Envía una secuencia vieja que debe ignorarse |
+| **Refrescar** | Vuelve a cargar el tablero desde la API |
+
+## 8. Ejemplos de API
+
+Este apartado permite usar el sistema sin la interfaz, desde una terminal.
+
+```bash
+# Tablero y métricas
+curl -s localhost:8080/api/vuelos | head -c 400
+curl -s localhost:8080/metrics
+curl -s localhost:8080/health
+
+# Estado de la simulación
+curl -s localhost:8080/api/simulacion
+
+# Cambiar a perfil lento (por defecto)
+curl -s -X POST localhost:8080/api/simulacion/ritmo \
+  -H 'content-type: application/json' -d '{"perfil":"lento"}'
+
+# Cambiar solo el intervalo entre vuelos nuevos (personalizado)
+curl -s -X POST localhost:8080/api/simulacion/ritmo \
+  -H 'content-type: application/json' -d '{"nuevo_vuelo_cada_seg":120}'
+
+# Pausar y reanudar
+curl -s -X POST localhost:8080/api/simulacion/pausar
+curl -s -X POST localhost:8080/api/simulacion/reanudar
+
+# Crear un vuelo que entra en 90 segundos
+curl -s -X POST localhost:8080/api/vuelos \
   -H 'content-type: application/json' \
-  -d '{"accion":"cambiar_puerta","fuente":"torre","puerta":"puerta_5","minutos":15,"motivo":"cambio operativo"}'
+  -d '{"destino":"CDMX","aerolinea":"Volaris","entrada_seg":90}'
+
+# Aplicar una transición legal
+curl -s -X POST localhost:8080/api/vuelos/1/estado \
+  -H 'content-type: application/json' -d '{"accion":"empezar_abordaje"}'
+
+# Transición ilegal: responde 409
+curl -s -i -X POST localhost:8080/api/vuelos/1/estado \
+  -H 'content-type: application/json' -d '{"accion":"aterrizar"}'
+
+# Escenarios de demo
+curl -s -X POST localhost:8080/api/demo/niebla
+curl -s -X POST localhost:8080/api/demo/caos
+curl -s -X POST localhost:8080/api/demo/fuera_de_orden
 ```
 
----
-
-## 5. Pruebas
-
-```bash
-rebar3 eunit
-```
-
-Resultado verificado en WSL2/Ubuntu con OTP 27 y rebar3 3.26.0:
-
-```text
-31 tests, 0 failures
-```
-
-Las pruebas cubren transiciones ilegales, mensajes fuera de orden, fuentes
-contradictorias, cascada por aeronave, caos, reinicio, cambio de puerta y
-asignación de puertas.
-
-También se ejecutó una prueba local de **300 clientes WebSocket**:
-300/300 conectados, 0 fallos y 300 `resync` iniciales. El detalle y las cifras
-están en [`docs/CARGA_300.md`](docs/CARGA_300.md).
-
----
-
-## 6. Prueba de caos
-
-En `test/p22_caos_tests.erl`:
-
-| Qué se mató | Qué se esperaba | Qué ocurrió |
+| Ruta | Método | Descripción |
 |---|---|---|
-| Vuelo 808 en `abordando` | PID nuevo, mismo estado y misma puerta; respaldo igual | Pasó: PID distinto, `abordando`, puerta conservada |
-| Vuelo 809 en `demorado` (30 min, motivo `niebla`) | Recuperar los 30 min y el motivo | Pasó: estado, demora y motivo conservados |
-| 5 vuelos (701–705) en serie | El bus y el árbol siguen vivos; los 5 vuelven | Pasó: `pong`, puertas y respaldo vivos, 5 vuelos en `programado` |
+| `/api/vuelos` | GET | Lista completa de vuelos |
+| `/api/vuelos` | POST | Crea un vuelo (`destino`, `aerolinea`, `entrada_seg`, `hora_programada`) |
+| `/api/vuelos/:id` | GET | Detalle con historial |
+| `/api/vuelos/:id/estado` | POST | Aplica una transición legal |
+| `/api/simulacion` | GET | Perfil, pausa, tiempos y vuelos vivos |
+| `/api/simulacion/ritmo` | POST | Cambia perfil y/o tiempos |
+| `/api/simulacion/pausar` | POST | Pausa el feed |
+| `/api/simulacion/reanudar` | POST | Reanuda el feed |
+| `/api/demo/:accion` | POST | `niebla`, `caos`, `fuera_de_orden`, `pausar`, `reanudar` |
+| `/metrics` | GET | Métricas para monitoreo |
+| `/health` | GET | Sonda simple para AWS/systemd |
+| `/ws` | WebSocket | Cambios en tiempo real |
 
-En vivo, `POST /api/demo/caos` mató el vuelo 7 cuando estaba en `despego`; el
-log mostró **una sola** reconstrucción y el vuelo siguió operando. No hubo
-bucle de reinicios.
+## 9. Supuestos y cifras verificadas
 
----
+**Supuestos propios**
 
-## 7. Supuestos y cifras
+- El aeropuerto tiene **20 puertas** físicas (`puertas_total`).
+- Se mantienen como máximo **14 vuelos vivos** a la vez (`max_vuelos_vivos`).
+- El escenario del problema habla de **120 vuelos por día** con picos de
+  **10 movimientos por hora**.
+- Los vuelos iniciales se siembran escalonados (0, 10, 20, … segundos) para que
+  no todos entren al mismo tiempo.
+- El perfil por defecto es **Lento**; el operador puede cambiarlo en caliente.
+- La hora programada se maneja en **segundos Unix**; los tiempos de simulación
+  se manejan en **milisegundos**.
+- Un vuelo `programado` no avanza hasta que llega su `hora_programada`.
+- Las transiciones del feed se emiten como fuente `torre`; la aerolínea no
+  puede imponerse sobre una decisión de la torre.
 
-Del enunciado, tomadas como **órdenes de magnitud** y no verificadas contra una
-fuente externa:
+**Cifras verificadas**
 
-- TIJ con **una sola pista**, ~**120 vuelos/día** y picos de **10
-  movimientos/hora**.
-- **300 clientes** viendo el tablero.
-- Niebla matutina que demora **20 min** todas las salidas.
-- Un vuelo que cambia de puerta y de hora a la vez.
+| Prueba | Resultado |
+|---|---|
+| `rebar3 compile` | compila sin warnings |
+| `rebar3 eunit` | **33 tests, 0 failures** |
+| `GET /`, `/api/vuelos`, `/metrics` | `200` |
+| `GET /api/simulacion` | `200` con perfil y tiempos |
+| Cambio de perfil en caliente | se refleja sin reiniciar |
+| `POST /api/vuelos` con `entrada_seg` | el vuelo queda `programado` hasta su hora |
+| Pausar / reanudar | no se duplican ticks |
+| `rebar3 release` | release ensamblado |
+| Reinicio del nodo | recupera vuelos desde `data/p22_respaldo.bin` |
 
-Supuestos propios:
+## 10. Diseño de la interfaz (Google Stitch)
 
-- **20 puertas** (configurable) y un máximo de **14 vuelos vivos** en la
-  simulación.
-- La **pista no se modela como recurso separado**; para este alcance bastan la
-  puerta y el turno de despegue.
-- Los vuelos son **simulados**: no se consumen OpenSky, AviationStack ni el FIDS.
-- El tiempo de la demo está **comprimido** (tick de 2 s).
-- La **torre** tiene la última palabra: una vez que fija un estado, la aerolínea
-  o el sistema no lo revierten.
-- Los estados reales se agrupan en **6 estados** operativos.
+La interfaz se diseñó en Google Stitch con el prompt de
+[`design/PROMPT_STITCH.md`](design/PROMPT_STITCH.md): dashboard en modo oscuro,
+columnas por estado, ficha de vuelo y bitácora de eventos. La versión final se
+redujo y se conectó al backend real para evitar saturación de datos y mantener
+legible el tablero en escritorio y celular.
 
-Cifras verificadas en esta implementación:
+### Interfaz creada con Stitch
 
-- **31 pruebas, 0 fallos** con `rebar3 eunit` en WSL2/Ubuntu, OTP 27 y rebar3
-  3.26.0.
-- **300/300** clientes WebSocket conectados, **0 fallos** y **300 `resync`**
-  iniciales.
-- **24 600 mensajes** entregados en 20 s (82 por cliente).
-- Handshake **p95 de 97.6 ms** (máximo 132.7 ms).
-- Memoria: **58.8 MB** con 300 clientes y 411 procesos; **40.6 MB** y 120
-  procesos al desconectarse.
-- Reinicio del nodo: **65 vuelos recuperados** desde
-  `data/p22_respaldo.bin`, conservando identificación, destino e historial.
+![Diseño original en Stitch](design/capturas/tablero-escritorio.png)
 
-El detalle de la carga está en [`docs/CARGA_300.md`](docs/CARGA_300.md).
+### Versión final conectada al backend
 
----
+![Tablero final con panel de simulación](design/capturas/tablero-simulacion.png)
 
-## 8. Interfaz
+## 11. Evidencias
 
-El tablero adopta el sistema de diseño exportado de **Google Stitch**:
-superficies oscuras, tipografía Inter/JetBrains Mono, barra lateral, KPIs,
-seis columnas por estado y modal de detalle con **Cambiar puerta**.
+### 1. Tablero con vuelos por estado
 
 ![Tablero de escritorio](design/capturas/tablero-escritorio.png)
 
-![Detalle con cambio de puerta](design/capturas/detalle-cambio-puerta.png)
+### 2. Panel de simulación configurable
 
-La vista móvil está en
-[`design/capturas/tablero-movil.png`](design/capturas/tablero-movil.png).
+El selector de velocidad, el intervalo entre vuelos, la pausa y el alta con
+`entrada_seg` están en la misma pantalla del tablero.
 
-- Sistema de diseño implementado: [`design/DESIGN.md`](design/DESIGN.md)
-- Índice de capturas: [`design/CAPTURAS.md`](design/CAPTURAS.md)
-- Mockups y ZIP de Stitch: [`design/stitch/`](design/stitch/)
+![Panel de simulación](design/capturas/tablero-simulacion.png)
 
----
+### 3. Detalle y cambio de puerta + hora
 
-## 9. Documentación
+![Detalle de vuelo y cambio de puerta](design/capturas/detalle-cambio-puerta.png)
 
-- **Manual de uso:** [`docs/GUIA_USO.md`](docs/GUIA_USO.md) — también publicado
-  como Gist: <https://gist.github.com/CarlosEliab/da48ed12e3fbec9f22077040b8227f8d>
-- **Montaje en VM y despliegue:** [`docs/VM_Y_DESPLIEGUE.md`](docs/VM_Y_DESPLIEGUE.md)
-- **Prueba de carga:** [`docs/CARGA_300.md`](docs/CARGA_300.md)
-- **Diseño UIX:** [`design/DESIGN.md`](design/DESIGN.md)
+### 4. Tablero en celular
 
-La unidad systemd de ejemplo está en
-[`deploy/p22-torre-de-control-tij.service`](deploy/p22-torre-de-control-tij.service).
+![Tablero responsive](design/capturas/tablero-movil.png)
 
----
-
-## 10. Estructura
+### 5. Resultado de `rebar3 eunit`
 
 ```text
-src/            módulos OTP, handlers cowboy, gen_statem y persistencia
-test/           pruebas EUnit
-priv/           tablero web (index.html)
-config/         sys.config y vm.args
-design/         sistema de diseño, capturas y mockups de Stitch
-docs/           manual, despliegue y prueba de carga
-deploy/         unidad systemd
-scripts/        cliente de prueba de carga WebSocket
+===> Performing EUnit tests...
+Finished in 12.6 seconds
+33 tests, 0 failures
 ```
+
+### 6. Prueba de caos
+
+El botón **Caos** mata un proceso de vuelo al azar. El supervisor lo reinicia,
+`init/1` recupera el último estado desde el respaldo y el tablero no pierde la
+tarjeta. El evento aparece en la bitácora como `caos`.
+
+### 7. Carga de 300 clientes
+
+El procedimiento y los resultados están en [`docs/CARGA_300.md`](docs/CARGA_300.md).
+
+## 12. Solución de problemas
+
+| Problema | Causa probable | Solución |
+|---|---|---|
+| La página no abre desde mi computadora | Puerto 8080 cerrado en AWS | Agregar regla de entrada TCP 8080 en el Security Group |
+| El indicador dice **Reconectando** | El servidor no está corriendo o cambió el puerto | Verifica `rebar3 shell` y abre la IP/puerto correctos |
+| Los vuelos se mueven muy rápido | Perfil `Rápido` o `Normal` | Selecciona **Lento** o **Muy lento**, o sube “Nuevo vuelo cada X s” |
+| Un vuelo no avanza | Su `hora_programada` aún no llega | Revisa la etiqueta “entra en N s” o crea el vuelo con `entrada_seg` menor |
+| `rebar3 eunit` falla por timeout | Hay un proceso viejo usando el puerto | Cierra otras instancias y vuelve a ejecutar |
+| Error al compilar | Falta Erlang/OTP 27 o una dependencia | Instala OTP 27+ y ejecuta `rebar3 compile` de nuevo |
+| Un botón responde “transición rechazada” | La acción no es legal en ese estado (409) | Es normal: actualiza y usa una acción permitida |
+| Aparece un *SUPERVISOR REPORT* en las pruebas | Es la prueba de recuperación que mata un proceso a propósito | No es un error: debe terminar con `0 failures` |
+| Al reiniciar se pierden los vuelos | `persistir` está en `false` o falta `data/` | Activa `{persistir, true}` y verifica permisos de `data/` |
+| El release no arranca en la VM | Faltan bibliotecas de OTP o el `-config` es incorrecto | Sigue [`docs/AWS.md`](docs/AWS.md) y no agregues `-config` en `vm.args` |
+
+## 13. Conclusión personal
+
+Al desarrollar este proyecto aprendí a modelar un problema de concurrencia real
+con Erlang/OTP. Cada vuelo es un proceso independiente y supervisado: si uno
+falla, el sistema no se detiene; el supervisor lo reinicia y recupera su último
+estado desde el respaldo. Esa separación entre el estado del vuelo, el bus de
+eventos y el asignador de puertas fue la parte más valiosa del diseño.
+
+También entendí la importancia de las reglas explícitas: una máquina de estados
+que rechaza transiciones ilegales evita muchos errores que en otros lenguajes se
+corrigen “a mano”. Los casos difíciles del problema (mensajes fuera de orden,
+fuentes contradictorias, efecto cascada y caos) se volvieron manejables al
+separarlos en procesos y reglas pequeñas.
+
+En la parte visual, integrar HTML, CSS y JavaScript en un solo archivo facilitó
+la distribución en un servidor ligero como Cowboy. El tablero usa `fetch()` y
+WebSocket para actualizarse sin recargar, y el panel de simulación permite
+explicar la operación en vivo sin tocar el código. Finalmente, preparar el
+release y el servicio `systemd` me mostró cómo llevar el proyecto a una VM en
+AWS y dejarlo funcionando de forma reproducible.
 
 ---
 
-## 11. Notas
+## Anexos
 
-- La prueba de 300 clientes se hizo en loopback local, no a través de Internet
-  ni TLS; el detalle está en `docs/CARGA_300.md`.
-- La interfaz se verificó a 1440 px y 390 px en Chrome; no se probó en un
-  teléfono físico.
-- La unidad systemd se incluye como plantilla para la VM final.
+| Documento | Contenido |
+|---|---|
+| [`docs/GUIA_USO.md`](docs/GUIA_USO.md) | Manual de uso y API |
+| [`docs/VM_Y_DESPLIEGUE.md`](docs/VM_Y_DESPLIEGUE.md) | Despliegue general en VM |
+| [`docs/AWS.md`](docs/AWS.md) | Guía paso a paso para AWS EC2 |
+| [`docs/DEMO_Y_RUBRICA.md`](docs/DEMO_Y_RUBRICA.md) | Guion de demo y rúbrica |
+| [`docs/CARGA_300.md`](docs/CARGA_300.md) | Prueba de carga con 300 clientes |
+| [`docs/TRASPASO.md`](docs/TRASPASO.md) | Bitácora técnica y decisiones de implementación |
+| [`problema/readme.md`](problema/readme.md) | Enunciado original del problema |
+| [`design/DESIGN.md`](design/DESIGN.md) | Decisiones de interfaz |

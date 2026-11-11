@@ -134,6 +134,30 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
   color:#fecdd3}
 .btn-peligro:hover{background:rgba(244,63,94,.18);border-color:var(--cancelado)}
 .btn-secundario{background:transparent}
+
+/* ---------- panel de simulacion ---------- */
+.sim-panel{display:flex;flex-direction:column;gap:.55rem;flex:1 1 26rem;min-width:0}
+.sim-fila{display:flex;flex-wrap:wrap;align-items:flex-end;gap:.55rem}
+.campo{display:flex;flex-direction:column;gap:.18rem;font-family:var(--mono);
+  font-size:.56rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--outline)}
+.campo input,.campo select{padding:.42rem .5rem;background:var(--surface-lowest);
+  border:1px solid var(--outline-variant);border-radius:var(--radio);
+  color:var(--on-surface);font-family:var(--fuente);font-size:.75rem;
+  text-transform:none;letter-spacing:0}
+.campo input{width:8rem}
+.campo input[type=number]{width:5.5rem}
+.campo select{width:9.5rem}
+.campo span{display:inline-flex;align-items:center;gap:.3rem;color:var(--outline);
+  font-family:var(--fuente);font-size:.7rem;font-weight:500;
+  text-transform:none;letter-spacing:0}
+.campo input:focus,.campo select:focus{outline:none;
+  border-color:var(--primary-container);
+  box-shadow:0 0 0 2px rgba(56,189,248,.18)}
+.sim-estado{margin:.05rem 0 0;font-family:var(--mono);font-size:.64rem;
+  color:var(--on-surface-variant)}
+.sim-estado b{color:var(--primary);font-weight:600}
+.sim-estado .pausa{color:var(--demorado)}
 .section-head{display:flex;align-items:flex-end;justify-content:space-between;
   gap:1rem;margin:1.05rem 0 .55rem}
 .section-head h2{margin:.12rem 0 0;font-size:.98rem;font-weight:600}
@@ -196,6 +220,8 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
   color:#fde68a}
 .badge.respaldo{background:rgba(244,63,94,.12);border-color:rgba(244,63,94,.30);
   color:#fecdd3}
+.badge.entrada{background:rgba(78,222,163,.12);border-color:rgba(78,222,163,.30);
+  color:#bbf7d0;text-transform:none}
 .vacio{margin:.35rem 0 0;padding:.6rem .4rem;border:1px dashed var(--outline-variant);
   border-radius:var(--radio);text-align:center;font-family:var(--mono);
   font-size:.58rem;letter-spacing:.05em;text-transform:uppercase;color:var(--outline)}
@@ -377,14 +403,56 @@ dialog .modal-body button:hover{background:rgba(56,189,248,.20)}
         <div>
           <span class="eyebrow">Control de operación</span>
           <h2>Acciones de torre</h2>
-          <p>Crear vuelos o inyectar fallas del feed simulado.</p>
+          <p>Inyecta fallas del feed simulado y refresca el tablero.</p>
         </div>
         <div class="acciones">
-          <button class="btn btn-primario" onclick="crearVuelo()">+ Crear vuelo</button>
           <button class="btn" onclick="demo('niebla')">Niebla +20</button>
           <button class="btn btn-peligro" onclick="demo('caos')">Caos</button>
           <button class="btn" onclick="demo('fuera_de_orden')">Fuera de orden</button>
           <button class="btn btn-secundario" onclick="refrescarTodo()">Refrescar</button>
+        </div>
+      </section>
+
+      <section class="toolbar" aria-label="Simulación y alta de vuelos">
+        <div>
+          <span class="eyebrow">Simulación</span>
+          <h2>Ritmo y nuevos vuelos</h2>
+          <p>Ajusta la velocidad en caliente y controla cuándo entra cada vuelo.</p>
+        </div>
+        <div class="sim-panel">
+          <div class="sim-fila">
+            <label class="campo">Velocidad
+              <select id="sim-perfil" aria-label="Velocidad de simulación">
+                <option value="muy_lento">Muy lento</option>
+                <option value="lento" selected>Lento</option>
+                <option value="normal">Normal</option>
+                <option value="rapido">Rápido</option>
+                <option value="personalizado">Personalizado</option>
+              </select>
+            </label>
+            <label class="campo">Nuevo vuelo cada
+              <span><input id="sim-nuevo-seg" type="number" min="5" max="600"
+                           step="5" value="90" aria-label="Segundos entre vuelos">
+                   s</span>
+            </label>
+            <button class="btn btn-primario" onclick="aplicarRitmo()">Aplicar ritmo</button>
+            <button class="btn" id="sim-pausa" onclick="togglePausa()">Pausar</button>
+          </div>
+          <div class="sim-fila">
+            <label class="campo">Destino
+              <input id="nv-destino" placeholder="CDMX" maxlength="12" autocomplete="off">
+            </label>
+            <label class="campo">Aerolínea
+              <input id="nv-aerolinea" placeholder="Opcional" maxlength="24" autocomplete="off">
+            </label>
+            <label class="campo">Entra en
+              <span><input id="nv-entrada" type="number" min="0" max="3600"
+                           step="5" value="60" aria-label="Segundos antes de entrar">
+                   s</span>
+            </label>
+            <button class="btn btn-primario" onclick="crearVuelo()">+ Crear vuelo</button>
+          </div>
+          <p class="sim-estado" id="sim-estado">Cargando simulación…</p>
         </div>
       </section>
 
@@ -448,6 +516,10 @@ const ETIQUETA={empezar_abordaje:"Abordar",despegar:"Despegar",
                 cambiar_puerta:"Cambiar puerta"};
 let vuelos={};           // id -> vista (la "verdad" local del tablero)
 let ws=null, wsViva=false;
+let sim={perfil:"lento",pausado:false,nuevo_vuelo_cada_ms:90000,
+         proximo_vuelo_ms:0,vuelos_vivos:0,max_vuelos:14};
+const PERFILES={muy_lento:"Muy lento",lento:"Lento",normal:"Normal",
+                rapido:"Rápido",personalizado:"Personalizado"};
 
 /* el API entrega arreglos JSON, pero por si llega un valor suelto */
 function lista(v){ return Array.isArray(v)?v:(v==null?[]:[v]); }
@@ -481,6 +553,11 @@ function pintarTodo(){
       badges.push(`<span class="badge puerta">${esc(p)}</span>`);
     }
     if(v.demora_min>0) badges.push(`<span class="badge demora">+${v.demora_min} MIN</span>`);
+    if(v.estado==="programado" && v.hora_programada){
+      const falta=Math.round(v.hora_programada-Date.now()/1000);
+      if(falta>0) badges.push(`<span class="badge entrada">entra en ${
+        falta<90?falta+" s":Math.round(falta/60)+" min"}</span>`);
+    }
     if(v.de_respaldo) badges.push(`<span class="badge respaldo">RESPALDO</span>`);
     const extras=badges.length?`<div class="badges">${badges.join("")}</div>`:"";
     const aerolinea=v.aerolinea?`<div class="meta">${esc(v.aerolinea)}</div>`:"";
@@ -568,8 +645,100 @@ async function detalle(id){
 
 /* ---------- acciones de demo ---------- */
 async function crearVuelo(){
-  await fetch("/api/vuelos",{method:"POST"}); refrescarTodo();
+  const destino=(document.getElementById("nv-destino").value||"").trim().toUpperCase();
+  const aerolinea=(document.getElementById("nv-aerolinea").value||"").trim();
+  const entrada=parseInt(document.getElementById("nv-entrada").value||"0",10);
+  const cuerpo={entrada_seg:Number.isFinite(entrada)&&entrada>=0?entrada:0};
+  if(destino) cuerpo.destino=destino;
+  if(aerolinea) cuerpo.aerolinea=aerolinea;
+  try{
+    const r=await fetch("/api/vuelos",{method:"POST",
+      headers:{"content-type":"application/json"},body:JSON.stringify(cuerpo)});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok){ banner(j.error||"no se pudo crear el vuelo"); return; }
+    log(`nuevo vuelo → ${esc(destino||"destino simulado")} · entra en ${
+      cuerpo.entrada_seg} s`,"#38bdf8");
+    document.getElementById("nv-destino").value="";
+    document.getElementById("nv-aerolinea").value="";
+    refrescarTodo();
+    cargarSimulacion(false);
+  }catch(_){ banner("sin conexión con la torre"); }
 }
+
+/* ---------- simulación: ritmo, pausa y estado ---------- */
+async function cargarSimulacion(actualizarCampos){
+  try{
+    const r=await fetch("/api/simulacion");
+    if(!r.ok) return;
+    const j=await r.json();
+    sim=j.simulacion||sim;
+    if(actualizarCampos){
+      document.getElementById("sim-perfil").value=sim.perfil||"personalizado";
+      document.getElementById("sim-nuevo-seg").value=
+        Math.max(5,Math.round((sim.nuevo_vuelo_cada_ms||90000)/1000));
+    }
+    pintarSimulacion();
+  }catch(_){}
+}
+
+function pintarSimulacion(){
+  const b=document.getElementById("sim-pausa");
+  b.textContent=sim.pausado?"Reanudar":"Pausar";
+  b.classList.toggle("btn-primario",!!sim.pausado);
+  const el=document.getElementById("sim-estado");
+  const perfil=PERFILES[sim.perfil]||sim.perfil||"—";
+  const prox=Math.max(0,Math.round((sim.proximo_vuelo_ms||0)/1000));
+  const vivos=`${sim.vuelos_vivos??"—"}/${sim.max_vuelos??"—"} vuelos vivos`;
+  if(sim.pausado){
+    el.innerHTML=`<span class="pausa">Simulación en pausa</span> · perfil
+      <b>${esc(perfil)}</b> · ${vivos}`;
+  }else{
+    el.innerHTML=`Simulación activa · perfil <b>${esc(perfil)}</b> ·
+      próximo vuelo en <b>${prox} s</b> · ${vivos}`;
+  }
+}
+
+async function aplicarRitmo(){
+  const perfil=document.getElementById("sim-perfil").value;
+  const seg=parseInt(document.getElementById("sim-nuevo-seg").value||"90",10);
+  if(perfil==="personalizado"){
+    if(!Number.isFinite(seg)||seg<5){
+      banner("el intervalo debe ser de al menos 5 segundos"); return;
+    }
+    await cambiarSimulacion("ritmo",{nuevo_vuelo_cada_seg:seg});
+  }else{
+    await cambiarSimulacion("ritmo",{perfil:perfil});
+  }
+}
+
+async function togglePausa(){
+  await cambiarSimulacion(sim.pausado?"reanudar":"pausar");
+}
+
+async function cambiarSimulacion(accion,cuerpo){
+  try{
+    const opciones={method:"POST"};
+    if(cuerpo){
+      opciones.headers={"content-type":"application/json"};
+      opciones.body=JSON.stringify(cuerpo);
+    }
+    const r=await fetch("/api/simulacion/"+accion,opciones);
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok){ banner(j.error||"no se pudo cambiar la simulación"); return; }
+    sim=j.simulacion||sim;
+    if(accion==="ritmo"){
+      document.getElementById("sim-perfil").value=sim.perfil||"personalizado";
+      document.getElementById("sim-nuevo-seg").value=
+        Math.max(5,Math.round((sim.nuevo_vuelo_cada_ms||90000)/1000));
+    }
+    pintarSimulacion();
+    log(accion==="ritmo"
+          ?`simulación: perfil ${esc(PERFILES[sim.perfil]||sim.perfil)}`
+          :`simulación: ${accion}`,
+        accion==="pausar"?"#f59e0b":"#10b981");
+  }catch(_){ banner("sin conexión con la torre"); }
+}
+
 async function refrescarTodo(){
   try{
     const r=await fetch("/api/vuelos"); const datos=await r.json();
@@ -721,7 +890,9 @@ function banner(txt){
 montarColumnas();
 conectar();
 refrescarTodo();
+cargarSimulacion(true);
 setInterval(metricas,5000);
+setInterval(()=>cargarSimulacion(false),5000);
 setInterval(refrescarTodo,30000);   // resync de fondo por si existe lag
 metricas();
 </script>

@@ -14,7 +14,15 @@ setup() ->
     %% puerto 0 => el sistema operativo asigna uno libre
     application:set_env(p22_torre_de_control_tij, puerto, 0),
     application:set_env(p22_torre_de_control_tij, caos, false),
+    %% Ritmo de prueba: perfil personalizado con tiempos minimos para
+    %% que las pruebas no esperen los 15 s del perfil lento real.
+    application:set_env(p22_torre_de_control_tij, perfil_simulacion,
+                        personalizado),
     application:set_env(p22_torre_de_control_tij, feed_ms, 300),
+    application:set_env(p22_torre_de_control_tij, nuevo_vuelo_cada_ms, 0),
+    application:set_env(p22_torre_de_control_tij, espera_entrada_ms, 0),
+    application:set_env(p22_torre_de_control_tij, abordaje_ms, 0),
+    application:set_env(p22_torre_de_control_tij, vuelo_ms, 0),
     %% ranch/cowboy deben estar arriba (en la app real los monta OTP)
     {ok, _} = application:ensure_all_started(cowboy),
     p22_test_ayudante:limpiar_nombres(),
@@ -56,6 +64,11 @@ arbol_completo_web_test_() ->
                ?assertEqual(200, status(RM)),
                ?assert(maps:is_key(<<"vuelos">>, contenido(RM))),
                ?assert(maps:is_key(<<"puertas">>, contenido(RM))),
+
+               %% GET /health: sonda de AWS/systemd
+               RH = consultar(<<"GET">>, <<"/health">>, <<>>),
+               ?assertEqual(200, status(RH)),
+               ?assertEqual(true, maps:get(<<"ok">>, contenido(RH))),
 
                %% GET /: el tablero HTML
                RX = consultar(<<"GET">>, <<"/">>, <<>>),
@@ -128,6 +141,98 @@ cambia_con_reintentos(Id, N) ->
             p22_test_ayudante:esperar(100),
             cambia_con_reintentos(Id, N - 1)
     end.
+
+%% ----------------------------------------------------------------------
+%% API de simulacion: consultar estado, cambiar ritmo, pausar y reanudar
+%% ----------------------------------------------------------------------
+simulacion_api_test_() ->
+    {foreach,
+     fun setup/0,
+     fun teardown/1,
+     [fun(_Sup) ->
+          [fun() ->
+               %% estado inicial: el fixture usa perfil personalizado
+               R = consultar(<<"GET">>, <<"/api/simulacion">>, <<>>),
+               ?assertEqual(200, status(R)),
+               S = maps:get(<<"simulacion">>, contenido(R)),
+               ?assertEqual(<<"personalizado">>, maps:get(<<"perfil">>, S)),
+               ?assertEqual(false, maps:get(<<"pausado">>, S)),
+
+               %% cambiar a un perfil listo
+               R2 = consultar(<<"POST">>, <<"/api/simulacion/ritmo">>,
+                              <<"{\"perfil\":\"rapido\"}">>),
+               ?assertEqual(200, status(R2)),
+               S2 = maps:get(<<"simulacion">>, contenido(R2)),
+               ?assertEqual(<<"rapido">>, maps:get(<<"perfil">>, S2)),
+               ?assertEqual(3000, maps:get(<<"feed_ms">>, S2)),
+
+               %% tiempo personalizado en segundos -> milisegundos
+               R3 = consultar(<<"POST">>, <<"/api/simulacion/ritmo">>,
+                              <<"{\"nuevo_vuelo_cada_seg\":2}">>),
+               ?assertEqual(200, status(R3)),
+               S3 = maps:get(<<"simulacion">>, contenido(R3)),
+               ?assertEqual(2000, maps:get(<<"nuevo_vuelo_cada_ms">>, S3)),
+               ?assertEqual(<<"personalizado">>,
+                            maps:get(<<"perfil">>, S3)),
+
+               %% valor fuera de rango: 409 y no se aplica
+               R4 = consultar(<<"POST">>, <<"/api/simulacion/ritmo">>,
+                              <<"{\"feed_ms\":1}">>),
+               ?assertEqual(409, status(R4)),
+
+               %% pausar / reanudar
+               R5 = consultar(<<"POST">>, <<"/api/simulacion/pausar">>, <<>>),
+               ?assertEqual(200, status(R5)),
+               ?assertEqual(true,
+                            maps:get(<<"pausado">>,
+                                     maps:get(<<"simulacion">>, contenido(R5)))),
+               R6 = consultar(<<"POST">>, <<"/api/simulacion/reanudar">>, <<>>),
+               ?assertEqual(200, status(R6)),
+               ?assertEqual(false,
+                            maps:get(<<"pausado">>,
+                                     maps:get(<<"simulacion">>, contenido(R6))))
+           end]
+      end]}.
+
+%% ----------------------------------------------------------------------
+%% POST /api/vuelos con entrada_seg / hora_programada: el vuelo NO debe
+%% avanzar antes de su hora de entrada.
+%% ----------------------------------------------------------------------
+entrada_programada_test_() ->
+    {foreach,
+     fun setup/0,
+     fun teardown/1,
+     [fun(_Sup) ->
+          [fun() ->
+               R = consultar(<<"POST">>, <<"/api/vuelos">>,
+                             <<"{\"destino\":\"CDMX\",\"entrada_seg\":60}">>),
+               ?assertEqual(201, status(R)),
+               Id = maps:get(<<"vuelo">>, contenido(R)),
+               p22_test_ayudante:esperar(900),
+               case p22_respaldo:leer_vuelo(Id) of
+                   #{estado := Estado, datos := Datos} ->
+                       ?assertEqual('programado', Estado),
+                       ?assert(maps:get(hora_programada, Datos) >
+                               os:system_time(second));
+                   no_encontrado ->
+                       ?assert(false)
+               end,
+
+               %% hora_programada explicita (Unix, segundos)
+               Futuro = os:system_time(second) + 600,
+               Cuerpo = io_lib:format("{\"hora_programada\":~p}", [Futuro]),
+               R2 = consultar(<<"POST">>, <<"/api/vuelos">>,
+                              unicode:characters_to_binary(Cuerpo)),
+               ?assertEqual(201, status(R2)),
+               Id2 = maps:get(<<"vuelo">>, contenido(R2)),
+               case p22_respaldo:leer_vuelo(Id2) of
+                   #{datos := D2} ->
+                       ?assertEqual(Futuro, maps:get(hora_programada, D2));
+                   no_encontrado ->
+                       ?assert(false)
+               end
+           end]
+      end]}.
 
 %% --- utilidades ------------------------------------------------------
 

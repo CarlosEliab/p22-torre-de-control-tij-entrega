@@ -34,6 +34,7 @@ init(Req0, State) ->
             #{eventos_por_minuto := N} -> N;
             _ -> 0
         end,
+    Simulacion = seguro(fun p22_feed:estado_simulacion/0, #{}),
     Contadores =
         [#{nombre => nombre_legible(Clave), valor => Valor}
          || {Clave, Valor} <- p22_respaldo:leer_todos_los_contadores()],
@@ -52,6 +53,7 @@ init(Req0, State) ->
                 libres => length(maps:get(libres, Puertas)),
                 ocupadas => maps:size(maps:from_list(maps:get(ocupadas, Puertas)))},
           eventos_por_minuto => EventosMin,
+          simulacion => Simulacion,
           clientes_tablero =>
               max(0, p22_respaldo:leer_contador(clientes_tablero)),
           contadores => Contadores,

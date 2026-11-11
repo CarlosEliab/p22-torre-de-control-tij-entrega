@@ -3,3 +3,5 @@ _build/
 erl_crash.dump
 rebar3.crashdump
 data/
+dist/
+docs/gist/

@@ -7,9 +7,13 @@
 %%   POST /api/vuelos           -> crea un vuelo (demo manual)
 %%   GET  /api/vuelos/:id       -> detalle con historial
 %%   POST /api/vuelos/:id/estado -> aplica una transicion manual
+%%   GET  /api/simulacion       -> estado del ritmo de simulacion
+%%   POST /api/simulacion/ritmo -> cambia perfil/tiempos en caliente
+%%   POST /api/simulacion/pausar|reanudar
 %%   POST /api/demo/:accion     -> niebla | caos | fuera_de_orden | pausar | reanudar
 %%   GET  /ws                   -> WebSocket: eventos de la torre
 %%   GET  /metrics              -> metricas para monitoreo
+%%   GET  /health               -> sonda simple para AWS/systemd
 %%
 %% El puerto viene de `p22_torre_de_control_tij.puerto` (sys.config).
 %% ===================================================================
@@ -29,11 +33,14 @@ init([]) ->
     Puerto = application:get_env(p22_torre_de_control_tij, puerto, 8080),
     Rutas =
         [{"/api/demo/:accion", p22_h_demo, []},
+         {"/api/simulacion/:accion", p22_h_simulacion, []},
+         {"/api/simulacion", p22_h_simulacion, []},
          {"/api/vuelos/:id/estado", p22_h_vuelo_estado, []},
          {"/api/vuelos/:id", p22_h_vuelo, []},
          {"/api/vuelos", p22_h_vuelos, []},
          {"/ws", p22_h_ws, []},
          {"/metrics", p22_h_metrics, []},
+         {"/health", p22_h_health, []},
          {"/", p22_h_index, []}],
     Despacho = cowboy_router:compile([{'_', Rutas}]),
     {ok, _} = cowboy:start_clear(p22_listener,

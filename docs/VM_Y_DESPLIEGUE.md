@@ -1,6 +1,7 @@
 # Montaje en VM y despliegue
 
-> **Materia:** Programación Lineal  
+> **Materia:** Programación Lógica y Funcional  
+> **Docente:** René Solís Reyes  
 > **Alumno:** Rodriguez Peraza Carlos Eliab  
 > **No. Control:** 23212719  
 > **Grupo:** 2-3
@@ -163,7 +164,7 @@ tener escritura ahí. Si usas otra ruta, ajusta `WorkingDirectory` y
 | `erl -version` en WSL | OTP 27 / ERTS 15.2.7.4 |
 | `rebar3 version` | 3.26.0 |
 | `rebar3 compile` | OK, sin warnings |
-| `rebar3 eunit` | **31 tests, 0 failures** |
+| `rebar3 eunit` | **33 tests, 0 failures** |
 | `rebar3 release` | release ensamblado |
 | Release en Linux | `/`, `/api/vuelos`, `/metrics` → **200** |
 | Persistencia | `data/p22_respaldo.bin`; recuperación tras reinicio |

@@ -10,12 +10,16 @@ User=p22
 Group=p22
 WorkingDirectory=/opt/p22
 Environment=HOME=/opt/p22
+Environment=LANG=C.UTF-8
 Environment=ERL_CRASH_DUMP=/opt/p22/erl_crash.dump
 ExecStart=/opt/p22/bin/p22_torre_de_control_tij foreground
 ExecStop=/opt/p22/bin/p22_torre_de_control_tij stop
 Restart=on-failure
 RestartSec=5
+TimeoutStopSec=20
 LimitNOFILE=65536
+NoNewPrivileges=true
+PrivateTmp=true
 # data/p22_respaldo.bin se escribe aqui
 ReadWritePaths=/opt/p22/data
 

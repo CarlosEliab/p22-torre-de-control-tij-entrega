@@ -1,6 +1,7 @@
 # Torre de control TIJ — manual de uso
 
-> **Materia:** Programación Lineal  
+> **Materia:** Programación Lógica y Funcional  
+> **Docente:** René Solís Reyes  
 > **Alumno:** Rodriguez Peraza Carlos Eliab  
 > **No. Control:** 23212719  
 > **Grupo:** 2-3
@@ -26,6 +27,9 @@ sistema. No necesitas saber Erlang para operarlo.
   **cambiar de puerta y de hora en una sola operación**.
 - Inyecta fallas para la demo: niebla (+20 min), caos (mata un proceso y lo
   reconstruye), mensajes fuera de orden y pausa/reanudación del feed.
+- **Ajusta la velocidad de la simulación en caliente** (Muy lento, Lento,
+  Normal, Rápido o Personalizado) y permite crear vuelos con una hora de
+  entrada definida.
 - Guarda el estado en disco: si se reinicia la máquina, los vuelos se recuperan.
 - Expone métricas y diagnóstico con `recon` en `/metrics`.
 
@@ -82,7 +86,7 @@ rm -rf _build data
 
 ```bash
 rebar3 compile     # debe terminar sin warnings
-rebar3 eunit       # 31 pruebas, 0 fallos
+rebar3 eunit       # 33 pruebas, 0 fallos
 ```
 
 ---
@@ -135,11 +139,26 @@ Cada columna es un estado. Cada tarjeta muestra:
 - Badges: `🚪 puerta_5`, `⏱ +15 min`, `respaldo` si el dato viene del respaldo
   porque el proceso está reconstruyéndose.
 
+### Panel de simulación
+
+Encima del tablero hay un panel para controlar el ritmo sin reiniciar:
+
+| Control | Qué hace |
+|---|---|
+| **Velocidad** | Cambia entre `Muy lento`, `Lento`, `Normal`, `Rápido` y `Personalizado`. |
+| **Nuevo vuelo cada X s** | Intervalo entre altas automáticas (se aplica con perfil personalizado). |
+| **Aplicar ritmo** | Envía el cambio al servidor en caliente. |
+| **Pausar / Reanudar** | Congela o reactiva la simulación. |
+| **Crear vuelo** | Alta manual con destino, aerolínea y **“entra en X s”**. |
+
+La línea de estado muestra el perfil activo, el próximo vuelo automático y los
+vuelos vivos. Las tarjetas de vuelos que aún no entran muestran **“entra en N
+s/min”**.
+
 ### Botones de demo
 
 | Botón | Qué hace |
 |---|---|
-| **+ Crear vuelo** | Crea un vuelo nuevo en `programado`. |
 | **Niebla +20** | Demora 20 min todas las salidas programadas. |
 | **Caos** | Mata un proceso de vuelo; el supervisor lo reconstruye con su estado y puerta. |
 | **Fuera de orden** | Envía una secuencia vieja; el sistema la ignora y lo registra. |
@@ -197,15 +216,20 @@ Base: `http://localhost:8080`
 | Método | Ruta | Para qué |
 |---|---|---|
 | GET | `/api/vuelos` | Lista de vuelos. |
-| POST | `/api/vuelos` | Crea un vuelo (cuerpo opcional). |
+| POST | `/api/vuelos` | Crea un vuelo (`destino`, `aerolinea`, `entrada_seg`, `hora_programada`). |
 | GET | `/api/vuelos/:id` | Detalle con historial. |
 | POST | `/api/vuelos/:id/estado` | Aplica una transición. |
+| GET | `/api/simulacion` | Perfil, pausa, tiempos y vuelos vivos. |
+| POST | `/api/simulacion/ritmo` | Cambia perfil y/o tiempos en caliente. |
+| POST | `/api/simulacion/pausar` | Congela el feed. |
+| POST | `/api/simulacion/reanudar` | Reanuda el feed. |
 | POST | `/api/demo/niebla` | Demora +20 min a los programados. |
 | POST | `/api/demo/caos` | Mata un vuelo al azar. |
 | POST | `/api/demo/fuera_de_orden` | Envía una secuencia vieja. |
-| POST | `/api/demo/pausar` | Congela el feed. |
-| POST | `/api/demo/reanudar` | Reanuda el feed. |
+| POST | `/api/demo/pausar` | Congela el feed (alias). |
+| POST | `/api/demo/reanudar` | Reanuda el feed (alias). |
 | GET | `/metrics` | Métricas y diagnóstico. |
+| GET | `/health` | Sonda simple para AWS/systemd. |
 | GET | `/ws` | WebSocket de eventos. |
 
 ### Ejemplos
@@ -227,10 +251,22 @@ curl -X POST localhost:8080/api/vuelos/7/estado \
   -H 'content-type: application/json' \
   -d '{"accion":"demorar","fuente":"torre","minutos":20,"motivo":"niebla"}'
 
-# Crear un vuelo
+# Crear un vuelo que entra en 90 segundos
 curl -X POST localhost:8080/api/vuelos \
   -H 'content-type: application/json' \
-  -d '{"destino":"CUN","aerolinea":"Volaris"}'
+  -d '{"destino":"CUN","aerolinea":"Volaris","entrada_seg":90}'
+
+# Cambiar la velocidad en caliente
+curl -X POST localhost:8080/api/simulacion/ritmo \
+  -H 'content-type: application/json' -d '{"perfil":"muy_lento"}'
+
+# Cambiar solo el intervalo entre vuelos nuevos
+curl -X POST localhost:8080/api/simulacion/ritmo \
+  -H 'content-type: application/json' -d '{"nuevo_vuelo_cada_seg":120}'
+
+# Pausar y reanudar
+curl -X POST localhost:8080/api/simulacion/pausar
+curl -X POST localhost:8080/api/simulacion/reanudar
 ```
 
 ### Códigos de error
@@ -277,6 +313,8 @@ En `design/capturas/`:
 
 - `tablero-escritorio.png` — tablero 1440 px con sidebar, KPIs, seis columnas
   y bitácora.
+- `tablero-simulacion.png` — panel de simulación con selector de velocidad,
+  pausa y alta de vuelo con `entrada_seg`.
 - `tablero-movil.png` — la misma app en 390 px, con columnas apiladas.
 - `detalle-cambio-puerta.png` — modal de `TJ-423` con **Cambiar puerta**,
   `puerta_5` y +15 min ya aplicados.
@@ -295,6 +333,8 @@ En `design/capturas/`:
 | El tablero dice “conexión perdida” | WebSocket caído | espera 2 s (reconecta) o revisa que la app siga viva. |
 | `data/p22_respaldo.bin` corrupto | se cortó la escritura | bórralo; arranca limpio. |
 | El release dice `configuration file not found` | `vm.args` con `-config` duplicado | usa el `config/vm.args` de este proyecto (sin `-config`). |
+| Los vuelos se mueven muy rápido | perfil `Rápido` o `Normal` | selecciona **Lento**/**Muy lento** o sube el intervalo entre vuelos. |
+| Un vuelo no avanza | su `hora_programada` todavía no llega | espera la etiqueta “entra en N s” o usa `entrada_seg` menor. |
 | WSL no responde en `localhost` | reenvío de puerto | prueba `curl localhost:8080` dentro de WSL; reinicia WSL con `wsl --shutdown`. |
 
 ---
@@ -303,7 +343,7 @@ En `design/capturas/`:
 
 ```bash
 rebar3 compile
-rebar3 eunit          # 31 tests, 0 failures
+rebar3 eunit          # 33 tests, 0 failures
 rebar3 shell
 ```
 

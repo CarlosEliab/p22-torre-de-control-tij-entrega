@@ -3,8 +3,12 @@
 %%
 %% GET  : lista completa de vuelos (por id) con su estado y datos
 %%        derivados del respaldo (uso general del tablero).
-%% POST : crea un vuelo nuevo de inmediato (demo manual). El cuerpo
-%%        acepta {"destino": "..."} opcional.
+%% POST : crea un vuelo nuevo. El cuerpo JSON es opcional:
+%%        {"destino":"CDMX","aerolinea":"Volaris",
+%%         "entrada_seg":60,"hora_programada":1760000000}
+%%        `entrada_seg' retrasa la entrada del vuelo N segundos (para
+%%        que no se mueva tan rapido); `hora_programada' fija la hora
+%%        Unix exacta (tiene prioridad).
 %% ===================================================================
 -module(p22_h_vuelos).
 
@@ -34,10 +38,13 @@ respuesta(_, _) ->
 %% Solo se aceptan campos conocidos y con el tipo correcto; cualquier
 %% otra cosa se ignora (el vuelo se crea igual con valores simulados).
 opciones_de({ok, Mapa}) ->
-    listas([{destino, <<"destino">>},
-            {aerolinea, <<"aerolinea">>},
-            {aeronave, <<"aeronave">>},
-            {identificacion, <<"identificacion">>}], Mapa, #{});
+    Texto = listas([{destino, <<"destino">>},
+                    {aerolinea, <<"aerolinea">>},
+                    {aeronave, <<"aeronave">>},
+                    {identificacion, <<"identificacion">>}], Mapa, #{}),
+    Numeros = enteros([{entrada_seg, <<"entrada_seg">>},
+                       {hora_programada, <<"hora_programada">>}], Mapa, Texto),
+    Numeros;
 opciones_de(error) ->
     #{}.
 
@@ -51,9 +58,22 @@ listas([{Clave, Json} | Resto], Mapa, Acc) ->
             listas(Resto, Mapa, Acc)
     end.
 
+enteros([], _Mapa, Acc) ->
+    Acc;
+enteros([{Clave, Json} | Resto], Mapa, Acc) ->
+    case maps:get(Json, Mapa, undefined) of
+        V when is_integer(V), V >= 0 ->
+            enteros(Resto, Mapa, Acc#{Clave => V});
+        V when is_float(V), V >= 0 ->
+            enteros(Resto, Mapa, Acc#{Clave => round(V)});
+        _ ->
+            enteros(Resto, Mapa, Acc)
+    end.
+
 a_bin(B) when is_binary(B) -> B;
 a_bin(A) when is_atom(A) -> atom_to_binary(A, utf8);
-a_bin(I) when is_integer(I) -> integer_to_binary(I).
+a_bin(I) when is_integer(I) -> integer_to_binary(I);
+a_bin(T) -> unicode:characters_to_binary(io_lib:format("~p", [T])).
 
 %% Snapshot de todos los vuelos del respaldo, ordenado por id, con el
 %% ESTADO del vuelo vivo cuando exista (el respaldo es la imagen de

@@ -1,17 +1,20 @@
 %% ===================================================================
 %% @doc p22_feed — feed simulado de la torre de control (proyecto 22).
 %%
-%% Simula la operación del aeropuerto: crea vuelos, los hace avanzar
+%% Simula la operacion del aeropuerto: crea vuelos, los hace avanzar
 %% por transiciones LEGALES del statem, inyecta demoras, niebla,
 %% mensajes FUERA DE ORDEN y prueba de caos (mata procesos de vuelos
-%% para validar la reconstrucción del sistema).
+%% para validar la reconstruccion del sistema).
 %%
-%% Cada `feed_ms` (sys.config, default 2000 ms) corre un "tick":
-%%   1. muestrea el contador acumulado de eventos (ventana ~1 min) para
-%%      calcular "eventos por minuto" en /metrics;
-%%   2. a veces inyecta: caos / mensaje fuera de orden / niebla;
-%%   3. hace avanzar los vuelos operativos;
-%%   4. crea vuelos nuevos si estamos debajo del tope de vivos.
+%% El ritmo es configurable EN CALIENTE con `ajustar_ritmo/1`:
+%%   - feed_ms               cada cuanto corre un tick
+%%   - nuevo_vuelo_cada_ms   separacion entre altas automaticas
+%%   - espera_entrada_ms     tiempo en 'programado' antes de abordar
+%%   - abordaje_ms           tiempo en 'abordando' antes de despegar
+%%   - vuelo_ms              tiempo en 'despego' antes de aterrizar
+%%
+%% Perfiles listos: muy_lento | lento | normal | rapido | personalizado.
+%% El perfil por defecto es `lento` (config/sys.config).
 %%
 %% Atiende {aeronave_cancelada, IdOrigen, Matricula, Motivo} que emite
 %% el statem al CANCELAR un vuelo: cancela el vuelo de REGRESO de la
@@ -19,15 +22,18 @@
 %%
 %% Controles para demo en vivo (también llamables desde la API):
 %%   nuevo_vuelo(), niebla(), inyectar_caos(), mensaje_fuera_de_orden(),
-%%   pausar(), reanudar(), metricas().
+%%   pausar(), reanudar(), ajustar_ritmo/1, estado_simulacion().
 %% ===================================================================
 -module(p22_feed).
 
 -behaviour(gen_server).
 
 -export([start_link/0, pausar/0, reanudar/0, nuevo_vuelo/0, nuevo_vuelo/1,
-         niebla/0, inyectar_caos/0, mensaje_fuera_de_orden/0, metricas/0]).
+         niebla/0, inyectar_caos/0, mensaje_fuera_de_orden/0, metricas/0,
+         ajustar_ritmo/1, estado_simulacion/0]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2]).
+
+-define(APP, p22_torre_de_control_tij).
 
 -define(MATRICULAS, [<<"XA-TIJ">>, <<"XA-VOL">>, <<"XA-AMX">>,
                      <<"XA-ALA">>, <<"XA-TUS">>, <<"XA-BCN">>]).
@@ -38,6 +44,10 @@
 -define(DESTINOS, [<<"CDMX">>, <<"GDL">>, <<"SJD">>, <<"MTY">>,
                    <<"LAX">>, <<"DFW">>, <<"SEA">>, <<"DEN">>,
                    <<"HNL">>, <<"ORD">>]).
+
+%% Campos del ritmo que se pueden ajustar en caliente.
+-define(CAMPOS_RITMO, [feed_ms, nuevo_vuelo_cada_ms, espera_entrada_ms,
+                       abordaje_ms, vuelo_ms]).
 
 start_link() ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
@@ -50,7 +60,7 @@ nuevo_vuelo() ->
 
 %% @doc Igual que nuevo_vuelo/0 pero permite fijar campos del vuelo.
 %% Opciones (claves atomo): destino, aerolinea, aeronave, identificacion,
-%% hora_programada. Lo usa POST /api/vuelos con un cuerpo JSON opcional.
+%% hora_programada, entrada_seg. Lo usa POST /api/vuelos.
 nuevo_vuelo(Opciones) when is_map(Opciones) ->
     gen_server:call(?MODULE, {nuevo_vuelo, Opciones}).
 
@@ -58,7 +68,7 @@ nuevo_vuelo(Opciones) when is_map(Opciones) ->
 niebla() ->
     gen_server:call(?MODULE, niebla).
 
-%% @doc Mata UN vuelo operativo al azar para validar la reconstrucción.
+%% @doc Mata UN vuelo operativo al azar para validar la reconstruccion.
 inyectar_caos() ->
     gen_server:call(?MODULE, inyectar_caos).
 
@@ -76,23 +86,39 @@ reanudar() ->
 metricas() ->
     gen_server:call(?MODULE, metricas).
 
+%% @doc Estado actual del simulador (perfil, pausa y tiempos).
+estado_simulacion() ->
+    gen_server:call(?MODULE, estado_simulacion).
+
+%% @doc Cambia el ritmo en caliente. Ejemplos:
+%%   ajustar_ritmo(#{perfil => lento})
+%%   ajustar_ritmo(#{nuevo_vuelo_cada_ms => 60000})
+ajustar_ritmo(Cambios) when is_map(Cambios) ->
+    gen_server:call(?MODULE, {ajustar_ritmo, Cambios}).
+
 %% --- gen_server ----------------------------------------------------
 
 init([]) ->
-    Intervalo = application:get_env(p22_torre_de_control_tij, feed_ms, 2000),
-    Caos = application:get_env(p22_torre_de_control_tij, caos, true),
+    Perfil = perfil_inicial(),
+    Ritmo = ritmo_inicial(Perfil),
+    publicar_ritmo(Ritmo, Perfil),
+    Caos = application:get_env(?APP, caos, true),
     %% Reinicio del sistema: re-arranca un proceso por cada vuelo de
     %% la foto guardada (memoria o disco). Si la foto esta vacia, siembra
     %% el escenario inicial.
     _ = arrancar_vuelos_guardados(),
-    Timer = erlang:send_after(Intervalo, self(), tick),
-    Estado = #{intervalo => Intervalo,
+    State0 = #{perfil => Perfil,
+               ritmo => Ritmo,
                pausado => false,
                caos => Caos,
                ventana => [],
-               timer => Timer},
-    logger:info("~s listo (tick ~p ms, caos ~p)", [?MODULE, Intervalo, Caos]),
-    {ok, Estado}.
+               timer => undefined,
+               gen => 0,
+               ultimo_nuevo => monotonic_ms()},
+    State = programar(State0),
+    logger:info("~s listo (perfil ~p, tick ~p ms, caos ~p)",
+                [?MODULE, Perfil, feed_ms(State), Caos]),
+    {ok, State}.
 
 handle_call(nuevo_vuelo, _From, State) ->
     {reply, crear_uno(#{}), State};
@@ -112,33 +138,46 @@ handle_call(inyectar_caos, _From, State) ->
     end;
 handle_call(mensaje_fuera_de_orden, _From, State) ->
     {reply, fuera_de_orden_base(), State};
-handle_call(pausar, _From, #{timer := Timer} = State) ->
+handle_call(pausar, _From, State) ->
     %% Se cancela la cadena de ticks: al reanudar se arranca UNA sola.
-    _ = case Timer of
-            undefined -> ok;
-            _ -> erlang:cancel_timer(Timer)
-        end,
-    {reply, ok, State#{pausado => true, timer => undefined}};
-handle_call(reanudar, _From, #{pausado := true, intervalo := I} = State) ->
-    Timer = erlang:send_after(I, self(), tick),
-    {reply, ok, State#{pausado => false, timer => Timer}};
+    State2 = cancelar_timer(State),
+    {reply, ok, State2#{pausado => true, timer => undefined}};
+handle_call(reanudar, _From, #{pausado := true} = State) ->
+    State2 = programar(State#{pausado => false}),
+    {reply, ok, State2};
 handle_call(reanudar, _From, State) ->
     %% ya estaba corriendo: no duplicar la cadena de ticks
     {reply, ok, State};
 handle_call(metricas, _From, #{ventana := Ventana} = State) ->
     {reply, #{eventos_por_minuto => tasa_por_minuto(Ventana)}, State};
+handle_call(estado_simulacion, _From, State) ->
+    {reply, estado_simulacion(State), State};
+handle_call({ajustar_ritmo, Cambios}, _From, State) ->
+    case aplicar_cambios(Cambios, State) of
+        {ok, State2} ->
+            State3 = cancelar_timer(State2),
+            State4 = case maps:get(pausado, State3) of
+                         true -> State3#{timer => undefined};
+                         false -> programar(State3)
+                     end,
+            {reply, {ok, estado_simulacion(State4)}, State4};
+        {error, Razon} ->
+            {reply, {error, Razon}, State}
+    end;
 handle_call(_Otro, _From, State) ->
     {reply, ok, State}.
 
 handle_cast(_Otro, State) ->
     {noreply, State}.
 
-handle_info(tick, #{pausado := true} = State) ->
-    {noreply, State#{timer => undefined}};
-
-handle_info(tick, #{intervalo := I} = State) ->
-    Timer = erlang:send_after(I, self(), tick),
-    {noreply, tick(State#{timer => Timer})};
+%% Cada cadena de ticks lleva un numero de generacion: si se cambia el
+%% ritmo mientras un tick viejo ya venia en el buzon, ese tick se ignora
+%% y no se duplica la cadena.
+handle_info({tick, Gen}, #{gen := Gen, pausado := false} = State) ->
+    State2 = tick(State),
+    {noreply, programar(State2)};
+handle_info({tick, _Viejo}, State) ->
+    {noreply, State};
 
 %% Efecto cascada: aeronave cancelada => su vuelo de regreso se cancela.
 handle_info({aeronave_cancelada, _IdOrigen, Matricula, _Motivo}, State) ->
@@ -158,20 +197,15 @@ handle_info(_Info, State) ->
 tick(State) ->
     %% 1. muestreo para eventos/minuto
     Ventana = muestrear(maps:get(ventana, State, [])),
-    State2 = State#{ventana => Ventana},
+    State1 = State#{ventana => Ventana},
     Vivos = vivos_operativos(),
     %% 2. inyecciones raras (caos, fuera de orden, niebla)
-    sorteos(State2, Vivos),
-    %% 3. avanzar vuelos operativos
-    lists:foreach(fun avanza/1, Vivos),
-    %% 4. crear vuelos nuevos si hay presupuesto
-    Tope = tope_vuelos(),
-    case length(Vivos) < Tope of
-        true ->
-            crear_vuelo(siguiente_id());
-        false ->
-            ok
-    end,
+    sorteos(State1, Vivos),
+    %% 3. avanzar vuelos operativos respetando el ritmo
+    Ritmo = maps:get(ritmo, State1),
+    lists:foreach(fun(Id) -> avanza(Id, Ritmo) end, Vivos),
+    %% 4. crear un vuelo nuevo solo si ya paso el intervalo configurado
+    State2 = quizas_crear(State1, Vivos),
     %% 5. retirar vuelos terminales viejos para que el tablero no
     %%    acumule cientos de tarjetas en una demo larga.
     limpiar_terminales(),
@@ -199,33 +233,86 @@ sorteos(#{caos := Caos}, _Vivos) ->
             ok
     end.
 
-%% Avanza un vuelo con transiciones legales (como la operacion real),
-%% con algo de aleatoriedad para no mover todo en pasa sincronizada.
-%% NOTA de autoridad: el feed representa a la TORRE (su sistema
-%% operativo), por eso emite como `torre'. Si emitiera como `sistema',
-%% despues de una demora declarada por la torre la jerarquia lo
-%% rechazaria para siempre y el vuelo quedaria congelado.
-avanza(Id) ->
+%% Avanza un vuelo con transiciones legales, pero solo cuando su
+%% tiempo de permanencia en el estado ya se cumplio. El feed representa
+%% a la TORRE (su sistema operativo), por eso emite como `torre'.
+avanza(Id, Ritmo) ->
     case p22_respaldo:leer_vuelo(Id) of
-        #{estado := Estado} ->
-            Sorteo = rand:uniform(10),
-            Accion =
-                case {Estado, Sorteo} of
-                    {'despego', _} -> aterrizar;
-                    {'abordando', S} when S =< 8 -> despegar;
-                    {'programado', S} when S =< 6 -> empezar_abordaje;
-                    {'demorado', S} when S =< 6 -> empezar_abordaje;
-                    _ -> ninguna
-                end,
-            case Accion of
-                ninguna -> ok;
-                _ ->
+        #{estado := Estado, datos := Datos} ->
+            case accion_automatica(Estado, Datos, Ritmo) of
+                ninguna ->
+                    ok;
+                Accion ->
                     _ = p22_vuelo_statem:transicion(Id, torre, sig(), Accion),
                     ok
             end;
         _ ->
             %% el vuelo esta entre reinicios: el siguiente tick lo vera
             ok
+    end.
+
+%% ¿Que accion automatica toca segun el estado y el tiempo transcurrido?
+accion_automatica('programado', Datos, _Ritmo) ->
+    case hora_llegada(Datos) =< os:system_time(millisecond) of
+        true -> con_suerte(empezar_abordaje, 7);
+        false -> ninguna
+    end;
+accion_automatica('demorado', Datos, Ritmo) ->
+    case transcurrido(Datos) >= maps:get(espera_entrada_ms, Ritmo) of
+        true -> con_suerte(empezar_abordaje, 6);
+        false -> ninguna
+    end;
+accion_automatica('abordando', Datos, Ritmo) ->
+    case transcurrido(Datos) >= maps:get(abordaje_ms, Ritmo) of
+        true -> con_suerte(despegar, 8);
+        false -> ninguna
+    end;
+accion_automatica('despego', Datos, Ritmo) ->
+    case transcurrido(Datos) >= maps:get(vuelo_ms, Ritmo) of
+        true -> aterrizar;
+        false -> ninguna
+    end;
+accion_automatica(_Estado, _Datos, _Ritmo) ->
+    ninguna.
+
+%% Pequeña dispersion para que no todos los vuelos cambien a la vez.
+con_suerte(Accion, Umbral) ->
+    case rand:uniform(10) =< Umbral of
+        true -> Accion;
+        false -> ninguna
+    end.
+
+%% Hora programada del vuelo en milisegundos. Si no existe, se toma
+%% como "ya puede entrar".
+hora_llegada(Datos) ->
+    case maps:get(hora_programada, Datos, 0) of
+        H when is_integer(H), H > 0 -> H * 1000;
+        _ -> 0
+    end.
+
+%% Milisegundos desde el ultimo cambio de estado (historial[0].ts).
+transcurrido(Datos) ->
+    case maps:get(historial, Datos, []) of
+        [#{ts := Ts} | _] when is_integer(Ts) ->
+            max(0, os:system_time(second) - Ts) * 1000;
+        _ ->
+            %% sin historial: se permite avanzar (vuelo recuperado viejo)
+            999999999
+    end.
+
+%% Crea un vuelo automatico solo si hay espacio y ya paso el intervalo.
+quizas_crear(State, Vivos) ->
+    Ritmo = maps:get(ritmo, State),
+    Tope = tope_vuelos(),
+    Ahora = monotonic_ms(),
+    Ultimo = maps:get(ultimo_nuevo, State, Ahora),
+    Cada = maps:get(nuevo_vuelo_cada_ms, Ritmo),
+    if
+        length(Vivos) < Tope andalso (Ahora - Ultimo) >= Cada ->
+            _ = crear_vuelo(siguiente_id()),
+            State#{ultimo_nuevo => Ahora};
+        true ->
+            State
     end.
 
 %% --- internos -------------------------------------------------------
@@ -284,7 +371,9 @@ fuera_de_orden_base() ->
 arrancar_vuelos_guardados() ->
     case p22_respaldo:todos_vuelos() of
         [] ->
-            [crear_vuelo(I) || I <- lists:seq(1, 8)];
+            %% Siembra escalonada: no todos entran al mismo tiempo.
+            [crear_vuelo(I, #{entrada_seg => (I - 1) * 10})
+             || I <- lists:seq(1, 8)];
         Vuelos ->
             lists:foreach(
               fun({Id, _Info}) ->
@@ -305,13 +394,14 @@ crear_vuelo(Id) ->
     crear_vuelo(Id, #{}).
 
 crear_vuelo(Id, Opciones) when is_map(Opciones) ->
+    Hora = hora_de_entrada(Opciones),
     Base = #{id => Id,
              identificacion => identificacion_de(Id),
              aeronave => al_azar(?MATRICULAS),
              aerolinea => al_azar(?AEROLINEAS),
              destino => al_azar(?DESTINOS),
              origen => <<"TIJ">>,
-             hora_programada => os:system_time(second) + 10 * 60},
+             hora_programada => Hora},
     %% Solo se permiten los campos conocidos del vuelo: nada de meter
     %% claves arbitrarias (id incluido) en el spec del gen_statem.
     Permitidas = maps:with([identificacion, aeronave, aerolinea,
@@ -330,10 +420,22 @@ crear_vuelo(Id, Opciones) when is_map(Opciones) ->
             {error, Razon}
     end.
 
-%% Crea un vuelo y devuelve {ok, Id} SOLO si el proceso arranco. Antes
-%% se respondia {ok, Id} siempre: si el nombre ya estaba registrado, el
-%% cliente creia que el vuelo existia y luego /api/vuelos daba 404
-%% (justo lo que detecto la suite).
+%% Hora de entrada: si viene hora_programada se respeta; si viene
+%% entrada_seg se suma al reloj; si no, se usa el tiempo de espera del
+%% perfil activo.
+hora_de_entrada(Opciones) ->
+    case maps:get(hora_programada, Opciones, undefined) of
+        H when is_integer(H), H > 0 ->
+            H;
+        _ ->
+            Seg = case maps:get(entrada_seg, Opciones, undefined) of
+                      E when is_integer(E), E >= 0 -> E;
+                      _ -> env_int(espera_entrada_ms, 60000) div 1000
+                  end,
+            os:system_time(second) + Seg
+    end.
+
+%% Crea un vuelo y devuelve {ok, Id} SOLO si el proceso arranco.
 crear_uno(Opciones) ->
     Id = siguiente_id(),
     case crear_vuelo(Id, Opciones) of
@@ -380,9 +482,9 @@ estado_operativo('despego') -> true;
 estado_operativo(_) -> false.
 
 tope_vuelos() ->
-    application:get_env(p22_torre_de_control_tij, max_vuelos_vivos, 14).
+    application:get_env(?APP, max_vuelos_vivos, 14).
 
-%% Ventana de muestreo para metricas: guarda ~30 muestras (~60 s).
+%% Ventana de muestreo para metricas: guarda ~30 muestras.
 muestrear(Ventana) ->
     Ts = os:system_time(second),
     lists:sublist([{Ts, p22_respaldo:leer_contador(eventos_min)} | Ventana], 30).
@@ -416,3 +518,159 @@ limpiar_terminales() ->
 
 al_azar(L) ->
     lists:nth(rand:uniform(length(L)), L).
+
+%% --- perfiles y configuracion del ritmo -----------------------------
+
+perfil_inicial() ->
+    case application:get_env(?APP, perfil_simulacion, lento) of
+        P when is_atom(P) ->
+            case perfil_valido(P) of
+                {ok, Perfil} -> Perfil;
+                error -> lento
+            end;
+        _ ->
+            lento
+    end.
+
+ritmo_inicial(personalizado) ->
+    #{feed_ms => env_int(feed_ms, 15000),
+      nuevo_vuelo_cada_ms => env_int(nuevo_vuelo_cada_ms, 90000),
+      espera_entrada_ms => env_int(espera_entrada_ms, 60000),
+      abordaje_ms => env_int(abordaje_ms, 60000),
+      vuelo_ms => env_int(vuelo_ms, 120000)};
+ritmo_inicial(Perfil) ->
+    preset(Perfil).
+
+preset(muy_lento) ->
+    #{feed_ms => 20000,
+      nuevo_vuelo_cada_ms => 120000,
+      espera_entrada_ms => 90000,
+      abordaje_ms => 60000,
+      vuelo_ms => 150000};
+preset(lento) ->
+    #{feed_ms => 15000,
+      nuevo_vuelo_cada_ms => 90000,
+      espera_entrada_ms => 60000,
+      abordaje_ms => 60000,
+      vuelo_ms => 120000};
+preset(normal) ->
+    #{feed_ms => 8000,
+      nuevo_vuelo_cada_ms => 45000,
+      espera_entrada_ms => 45000,
+      abordaje_ms => 40000,
+      vuelo_ms => 90000};
+preset(rapido) ->
+    #{feed_ms => 3000,
+      nuevo_vuelo_cada_ms => 15000,
+      espera_entrada_ms => 15000,
+      abordaje_ms => 12000,
+      vuelo_ms => 30000};
+preset(_) ->
+    preset(lento).
+
+perfil_valido(muy_lento) -> {ok, muy_lento};
+perfil_valido(lento) -> {ok, lento};
+perfil_valido(normal) -> {ok, normal};
+perfil_valido(rapido) -> {ok, rapido};
+perfil_valido(personalizado) -> {ok, personalizado};
+perfil_valido(_) -> error.
+
+%% Aplica un cambio de perfil y/o tiempos. Si se cambia un tiempo
+%% suelto, el perfil pasa a `personalizado'. Devuelve {ok, State2}
+%% para que el gen_server conserve ritmo/perfil en su estado.
+aplicar_cambios(Cambios, State) ->
+    PerfilBase = maps:get(perfil, State),
+    RitmoBase = maps:get(ritmo, State),
+    case maps:get(perfil, Cambios, undefined) of
+        undefined ->
+            aplicar_campos(maps:without([perfil], Cambios), RitmoBase,
+                           PerfilBase, State);
+        Perfil0 ->
+            case perfil_valido(Perfil0) of
+                {ok, Perfil} ->
+                    Base = case Perfil of
+                               personalizado -> RitmoBase;
+                               _ -> preset(Perfil)
+                           end,
+                    aplicar_campos(maps:without([perfil], Cambios), Base,
+                                   Perfil, State);
+                error ->
+                    {error, perfil_invalido}
+            end
+    end.
+
+aplicar_campos(Cambios, RitmoBase, PerfilBase, State) ->
+    case validar_campos(?CAMPOS_RITMO, Cambios, RitmoBase) of
+        {ok, Ritmo} ->
+            TieneCampos = lists:any(fun(K) -> maps:is_key(K, Cambios) end,
+                                    ?CAMPOS_RITMO),
+            Perfil = case TieneCampos of
+                         true -> personalizado;
+                         false -> PerfilBase
+                     end,
+            publicar_ritmo(Ritmo, Perfil),
+            {ok, State#{ritmo => Ritmo, perfil => Perfil}};
+        {error, Razon} ->
+            {error, Razon}
+    end.
+
+validar_campos([], _Cambios, Acc) ->
+    {ok, Acc};
+validar_campos([Campo | Resto], Cambios, Acc) ->
+    case maps:get(Campo, Cambios, undefined) of
+        undefined ->
+            validar_campos(Resto, Cambios, Acc);
+        Valor when is_integer(Valor), Valor >= 0, Valor =< 3600000 ->
+            case Campo of
+                feed_ms when Valor < 100 ->
+                    {error, {valor_invalido, Campo}};
+                _ ->
+                    validar_campos(Resto, Cambios, Acc#{Campo => Valor})
+            end;
+        _ ->
+            {error, {valor_invalido, Campo}}
+    end.
+
+publicar_ritmo(Ritmo, Perfil) ->
+    application:set_env(?APP, perfil_simulacion, Perfil),
+    lists:foreach(
+      fun(Campo) ->
+          application:set_env(?APP, Campo, maps:get(Campo, Ritmo))
+      end,
+      ?CAMPOS_RITMO),
+    ok.
+
+env_int(Clave, Defecto) ->
+    case application:get_env(?APP, Clave, Defecto) of
+        V when is_integer(V) -> V;
+        _ -> Defecto
+    end.
+
+estado_simulacion(State) ->
+    Ritmo = maps:get(ritmo, State),
+    Ahora = monotonic_ms(),
+    Ultimo = maps:get(ultimo_nuevo, State, Ahora),
+    Cada = maps:get(nuevo_vuelo_cada_ms, Ritmo),
+    Proximo = max(0, Cada - (Ahora - Ultimo)),
+    Ritmo#{perfil => maps:get(perfil, State),
+           pausado => maps:get(pausado, State),
+           vuelos_vivos => length(vivos_operativos()),
+           max_vuelos => tope_vuelos(),
+           proximo_vuelo_ms => Proximo}.
+
+feed_ms(State) ->
+    maps:get(feed_ms, maps:get(ritmo, State)).
+
+programar(State) ->
+    Gen = maps:get(gen, State, 0) + 1,
+    Timer = erlang:send_after(feed_ms(State), self(), {tick, Gen}),
+    State#{timer => Timer, gen => Gen}.
+
+cancelar_timer(#{timer := undefined} = State) ->
+    State;
+cancelar_timer(#{timer := Timer} = State) ->
+    _ = erlang:cancel_timer(Timer),
+    State#{timer => undefined}.
+
+monotonic_ms() ->
+    erlang:monotonic_time(millisecond).

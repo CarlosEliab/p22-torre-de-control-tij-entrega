@@ -14,6 +14,7 @@
 ## setcookie igual en nodos distribuidos tipo lab
 -setcookie p22_torre_tij_cookie
 
-## Argumentos recomendados por el repo del curso para la VM
-## (Raspberry Pi CM5 / VM de 4 nucleos; ajusta si tu VM es mas chica)
-+S 4:4 +SDcpu 4:4 +SDio 10 +K true +P 1048576
+## Ajuste para una VM pequena de AWS (2 vCPU / 2 GB).
+## Si tu instancia tiene 4 nucleos, sube a "+S 4:4 +SDcpu 4:4".
+## +SDio 4 evita que el planificador de I/O compita con el disco de red.
++S 2:2 +SDcpu 2:2 +SDio 4 +K true +P 1048576
