@@ -29,11 +29,11 @@ contexto previo.
 ## 0. Resumen para retomar en 2 minutos
 
 **¿Está listo?** Para **trasladarlo, compilarlo y ejecutarlo** en otra
-computadora con Erlang/OTP 27+ y rebar3: **sí**. Compila, pasan **31 pruebas**,
+computadora con Erlang/OTP 27+ y rebar3: **sí**. Compila, pasan **33 pruebas**,
 el tablero y la API responden, el caos reconstruye vuelos, el reinicio de la VM
 recupera el estado desde disco y el release arranca en Linux. Verificado en
 Windows con OTP 29.1.2 y en WSL2/Ubuntu con OTP 27 + rebar3 3.26.0 (compile sin
-warnings, 31 pruebas, HTTP 200 en `/`, `/api/vuelos` y `/metrics`, release
+warnings, 33 pruebas, HTTP 200 en `/`, `/api/vuelos` y `/metrics`, release
 ensamblado y ejecutado, 10-nov-2026).
 
 Para la **rúbrica al 100 %** el código está completo: el cambio de puerta +
@@ -46,7 +46,7 @@ final. El resto de este documento dice exactamente qué se hizo y cómo se
 verificó.
 
 - El proyecto está **funcional en Windows con OTP 29.1.2 y en WSL2/Ubuntu con
-  OTP 27**: compila, pasan 31 pruebas, el tablero y la API responden, el caos
+  OTP 27**: compila, pasan 33 pruebas, el tablero y la API responden, el caos
   reconstruye vuelos y el reinicio de la VM recupera el estado desde disco.
 - **No copies `_build/` ni `data/`** a la otra computadora. `_build` se generó
   aquí con OTP 29 y contiene un release de Windows; los `.beam` de OTP 29 no
@@ -77,7 +77,7 @@ verificó.
 - [x] Reinicio de la VM: respaldo en disco y recuperación de vuelos.
 - [x] **Cambio simultáneo de puerta + hora** (`cambiar_puerta`), con evento
   propio, API, botón en el tablero y pruebas.
-- [x] `rebar3 compile` y `rebar3 eunit` en verde (31 pruebas, 0 fallos).
+- [x] `rebar3 compile` y `rebar3 eunit` en verde (33 pruebas, 0 fallos).
 - [x] `rebar3 release` ensambla y **arranca en Linux** con ERTS y
   `priv/index.html`.
 - [x] Unidad systemd de ejemplo en `deploy/` y guía en `docs/VM_Y_DESPLIEGUE.md`.
@@ -193,7 +193,7 @@ sobre `/mnt/c` (OneDrive es lento).
 
 ```bash
 rebar3 compile          # debe terminar sin warnings (warnings_as_errors)
-rebar3 eunit            # 31 tests, 0 failures
+rebar3 eunit            # 33 tests, 0 failures
 rebar3 shell            # arranca la app y el tablero
 ```
 
@@ -359,7 +359,7 @@ código tiene ciertas guardas.
     procesado cuando la prueba empieza a mirar.
 34. Se reemplazaron usos de `catch Expr` por `try/catch` (OTP 29 marca el
     primero como obsoleto y `warnings_as_errors` rompe la compilación).
-35. Resultado final: **31 tests, 0 failures** (ver §10).
+35. Resultado final: **33 tests, 0 failures** (ver §10).
 
 ### 5.8 Interfaz (`priv/index.html`)
 
@@ -392,7 +392,7 @@ código tiene ciertas guardas.
     y abortaba con `configuration file not found`. Se quitó esa línea y se
     añadieron los argumentos recomendados del repo
     (`+S 4:4 +SDcpu 4:4 +SDio 10 +K true +P 1048576`).
-47. **Verificación en WSL2/Ubuntu (OTP 27):** compile sin warnings, 31 tests,
+47. **Verificación en WSL2/Ubuntu (OTP 27):** compile sin warnings, 33 tests,
     app con HTTP 200 y release ensamblado y ejecutado con `/`, `/api/vuelos` y
     `/metrics` en 200.
 48. **Entregables de rúbrica:** capturas reales en `design/capturas/`, manual
@@ -582,12 +582,12 @@ y reducciones).
 
 ```bash
 rebar3 eunit
-# 31 tests, 0 failures
+# 33 tests, 0 failures
 ```
 
 La misma corrida se hizo en **WSL2/Ubuntu con OTP 27 y rebar3 3.26.0**
 (10-nov-2026), sobre una copia sin `_build/` ni `data/`: `rebar3 compile` sin
-warnings y **31 tests, 0 failures**. También se arrancó la app y se comprobó
+warnings y **33 tests, 0 failures**. También se arrancó la app y se comprobó
 con HTTP real: `GET /` → **200**, `GET /api/vuelos` → **200**, `GET /metrics`
 → **200**. El **release se ensambló y arrancó en Linux** con esos mismos tres
 endpoints en **200**.
@@ -805,7 +805,7 @@ un paso sin ver su salida.
 ### B. Compilación y pruebas
 
 - [ ] `rebar3 compile` termina con exit 0 y **sin warnings**.
-- [ ] `rebar3 eunit` imprime `31 tests, 0 failures` (exit 0).
+- [ ] `rebar3 eunit` imprime `33 tests, 0 failures` (exit 0).
 - [ ] Si agregas pruebas, actualiza el número en este README.
 
 ### C. Arranque

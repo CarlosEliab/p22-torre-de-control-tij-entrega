@@ -377,15 +377,25 @@ El selector de velocidad, el intervalo entre vuelos, la pausa y el alta con
 
 ![Panel de simulación](design/capturas/tablero-simulacion.png)
 
-### 3. Detalle y cambio de puerta + hora
+### 3. Entrada escalonada de los vuelos nuevos
+
+El panel crea un vuelo con **“entra en X s”** y la simulación respeta ese
+compromiso: la tarjeta muestra `entra en 3 min` y el vuelo no avanza hasta su
+hora programada. Aquí el perfil activo es **Lento** (tick 15 s, un vuelo nuevo
+cada 90 s) y los vuelos recién creados esperan su turno en la columna
+`PROGRAMADO`.
+
+![Entrada escalonada de vuelos nuevos](design/capturas/panel-simulacion.png)
+
+### 4. Detalle y cambio de puerta + hora
 
 ![Detalle de vuelo y cambio de puerta](design/capturas/detalle-cambio-puerta.png)
 
-### 4. Tablero en celular
+### 5. Tablero en celular
 
 ![Tablero responsive](design/capturas/tablero-movil.png)
 
-### 5. Resultado de `rebar3 eunit`
+### 6. Resultado de `rebar3 eunit`
 
 ```text
 ===> Performing EUnit tests...
@@ -393,13 +403,13 @@ Finished in 12.6 seconds
 33 tests, 0 failures
 ```
 
-### 6. Prueba de caos
+### 7. Prueba de caos
 
 El botón **Caos** mata un proceso de vuelo al azar. El supervisor lo reinicia,
 `init/1` recupera el último estado desde el respaldo y el tablero no pierde la
 tarjeta. El evento aparece en la bitácora como `caos`.
 
-### 7. Carga de 300 clientes
+### 8. Carga de 300 clientes
 
 El procedimiento y los resultados están en [`docs/CARGA_300.md`](docs/CARGA_300.md).
 
