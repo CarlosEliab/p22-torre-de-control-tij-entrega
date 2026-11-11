@@ -17,6 +17,7 @@ set -euo pipefail
 PROYECTO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PADRE="$(dirname "${PROYECTO}")"
 NOMBRE="$(basename "${PROYECTO}")"
+NOMBRE_FIJO="p22-torre-de-control-tij"
 SALIDA="${PROYECTO}/dist/p22-torre-de-control-tij.tar.gz"
 
 mkdir -p "${PROYECTO}/dist"
@@ -29,6 +30,8 @@ tar \
     --exclude="${NOMBRE}/.git" \
     --exclude="${NOMBRE}/erl_crash.dump" \
     --exclude="${NOMBRE}/**/erl_crash.dump" \
+    --exclude="*/.tmp_*" \
+    --transform="s|^${NOMBRE}|${NOMBRE_FIJO}|" \
     -czf "${SALIDA}" \
     -C "${PADRE}" "${NOMBRE}"
 
