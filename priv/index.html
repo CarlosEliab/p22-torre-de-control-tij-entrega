@@ -561,8 +561,8 @@ function pintarTodo(){
     if(v.demora_min>0) badges.push(`<span class="badge demora">+${v.demora_min} MIN</span>`);
     if(v.estado==="programado" && v.hora_programada){
       const falta=Math.round(v.hora_programada-Date.now()/1000);
-      if(falta>0) badges.push(`<span class="badge entrada">entra en ${
-        falta<90?falta+" s":Math.round(falta/60)+" min"}</span>`);
+      if(falta>0) badges.push(`<span class="badge entrada" data-hora="${v.hora_programada}">entra en ${
+        textoFalta(falta)}</span>`);
     }
     if(v.de_respaldo) badges.push(`<span class="badge respaldo">RESPALDO</span>`);
     const extras=badges.length?`<div class="badges">${badges.join("")}</div>`:"";
@@ -685,6 +685,21 @@ async function cargarSimulacion(actualizarCampos){
     }
     pintarSimulacion();
   }catch(_){}
+}
+
+/* Segundos restantes en texto corto: menos de 90 s en segundos, luego minutos. */
+function textoFalta(seg){
+  return seg<90?seg+" s":Math.round(seg/60)+" min";
+}
+
+/* Refresca SOLO los contadores de las tarjetas, sin re-renderizar el tablero:
+   la cuenta no espera a que llegue un evento por WebSocket. */
+function actualizarCuentas(){
+  const ahora=Date.now()/1000;
+  document.querySelectorAll(".badge.entrada[data-hora]").forEach(b=>{
+    const falta=Math.round(parseFloat(b.dataset.hora)-ahora);
+    b.textContent=falta>0?"entra en "+textoFalta(falta):"entra ahora";
+  });
 }
 
 function pintarSimulacion(){
@@ -902,6 +917,18 @@ refrescarTodo();
 cargarSimulacion(true);
 setInterval(metricas,5000);
 setInterval(()=>cargarSimulacion(false),5000);
+/* Cuenta regresiva fluida: un tick por segundo, independiente de los eventos.
+   Al llegar a cero pide el estado real una sola vez para no quedarse en 0. */
+let pidiendoSim=false;
+setInterval(()=>{
+  if(!sim.pausado) sim.proximo_vuelo_ms=Math.max(0,(sim.proximo_vuelo_ms||0)-1000);
+  pintarSimulacion();
+  actualizarCuentas();
+  if((sim.proximo_vuelo_ms||0)<=0 && !sim.pausado && !pidiendoSim){
+    pidiendoSim=true;
+    cargarSimulacion(false).finally(()=>{ pidiendoSim=false; });
+  }
+},1000);
 setInterval(refrescarTodo,30000);   // resync de fondo por si existe lag
 metricas();
 </script>
